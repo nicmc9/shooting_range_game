@@ -9,6 +9,7 @@
 #include "sprite_renderer.h"
 #include "resource_manager.h"
 
+#include "utility.hpp"
 /*
   Контейнер для игровых объектов а именно кирпичей,
   сам загружает информацию с диска и инициализирем игровые объекты
@@ -30,5 +31,5 @@ public:
     bool IsCompleted();
 private:
     //инициализация уровня на основе данных их файла
-    void init(std::vector<std::vector<unsigned int>> tileData, unsigned int levelWidth, unsigned int levelHeight);
+    void init(std::vector<std::vector<unsigned int>> targetData, unsigned int levelWidth, unsigned int levelHeight);
 };

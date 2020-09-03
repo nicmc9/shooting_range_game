@@ -25,9 +25,11 @@ void Game::Init()
 
     //Загружаем все текстуры
     ResourceManager::LoadTexture("resources/textures/background.png", false, "background");
-   
+    ResourceManager::LoadTexture("resources/textures/block.png", false, "block");
+
     //Загружаем все уровни
-   
+    GameLevel one; one.Load("resources/levels/one.lvl", this->Width, this->Height / 2);
+    this->Levels.push_back(one);
     this->CurrentLevel = 0;
 
     Renderer = new SpriteRenderer(sprite_shader);
@@ -48,7 +50,10 @@ void Game::ProcessInput(float dt)
 
 void Game::Render()
 {
-    Renderer->DrawSprite(ResourceManager::GetTexture("background"), glm::vec2(0.0f, 0.0f), glm::vec2(this->Width, this->Height), 0.0f );
+   // Renderer->DrawSprite(ResourceManager::GetTexture("background"), glm::vec2(0.0f, 0.0f), glm::vec2(this->Width, this->Height), 0.0f );
+
+      //Логигу отрисовки уровня отдаем самому уровню - вместе с настренным рисовальшиком
+       this->Levels[this->CurrentLevel].Draw(*Renderer);
 }
 
 void Game::ResetLevel()
