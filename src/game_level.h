@@ -22,7 +22,9 @@ class GameLevel
 {
 public:
     
-    std::vector<GameObject> Targets;
+    
+    std::vector<GameObject> Targets; 
+    
 
     GameLevel() { }
     //Загрузка уровня из файла
@@ -30,7 +32,7 @@ public:
     void Load(const char *file, unsigned int levelWidth, unsigned int levelHeight);
     // отрисовка всего уровня
     void Draw(SpriteRenderer &renderer);
-    
+    void Update(float dt, unsigned int window_width, unsigned int window_height);
 
     //проверка на завершенное, т.е. все кирпичи уничтожены кроме неубиваемых    
     bool IsCompleted();

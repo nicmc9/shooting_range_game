@@ -42,10 +42,16 @@ void GameLevel::Load(const char *file, unsigned int levelWidth, unsigned int lev
 void GameLevel::Draw(SpriteRenderer &renderer)
 {
     for (GameObject &target : this->Targets)
-        if (!target.Destroyed)  
+        if (!target.Destroyed && target.Spawned)  
             target.Draw(renderer);
 }
-
+void GameLevel::Update(float dt, unsigned int window_width, unsigned int window_height )
+{
+   
+    for(GameObject& target : this->Targets)
+        if (!target.Destroyed && target.Spawned)  
+            target.Move(dt, window_width, window_height);
+}
 
 //! Возможно замена на пустой объект
 bool GameLevel::IsCompleted()
@@ -64,16 +70,21 @@ void GameLevel::init(std::vector<std::vector<unsigned int>> targetData, unsigned
     size_t numTargets = targetData[0].size(); //! Здесь учитываеться что все строки в файле одинаковой длинны
     // мы можем индексировать вектор в [0], так как эта функция вызывается только если высота > 0
 
+    float radius = 25.0f; 
+    // точка появления
+    
+    auto posy =  0 + radius;
     //генератор случайных чисел новый
     std::mt19937 gen; 
     gen.seed(time(0));
-    std::uniform_int_distribution<> positionX(0, levelWidth); 
-    std::uniform_int_distribution<> positionY(0, levelHeight); 
+    
     std::uniform_int_distribution<> velocityX(150, 300); 
     std::uniform_int_distribution<> velocityY(70, 150); 
 
-    float unit_height = levelHeight / static_cast<float>(numTargets); 
-   	
+    float unit_width = levelWidth / static_cast<float>(numTargets);
+    
+   
+
     for (unsigned int y = 0; y < numRows; ++y)
     {
         for (unsigned int x = 0; x < numTargets; ++x) //width == 5
@@ -81,24 +92,20 @@ void GameLevel::init(std::vector<std::vector<unsigned int>> targetData, unsigned
                 // проверяем тип блока и назначаем свойства
             if (targetData[y][x] == 1) // твердый
             {
-                int posx = positionX(gen);
-                int posy = positionY(gen);
-
-                glm::vec2 pos(posx, posy);
+               
+                glm::vec2 pos(unit_width * x, posy);
                 //TODO стратегия размеров - ?? должны быть разные но в пределах 
-                float radius = 25.0f; // позже возьмем из настроек
                 glm::vec2 size(radius * 2.0f, radius * 2.0f);
-
                 int velx = velocityX(gen);
                 int vely = velocityY(gen);
-
                 if(velx % 2 == 0 ) velx = -velx;
-                if(vely % 2 == 0 ) vely = -vely;
-
                 glm::vec2 velocity(velx,vely);
 
-                GameObject obj(pos, size, ResourceManager::GetTexture("target"), glm::vec3(1.0f), velocity );
+                GameObject obj(pos, size, ResourceManager::GetTexture("target"), radius, glm::vec3(1.0f), velocity );
+                
+
                 this->Targets.push_back(obj);
+                
             }
             else if (targetData[y][x] > 10)	// не твердый номер теперь означает цвет
             {

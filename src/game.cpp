@@ -2,8 +2,16 @@
 #include <iostream>
 #include "game.hpp"
 
+#include "utility.hpp"
 
-bool CheckCollision(GameObject& one, GameObject& two);
+enum Direction {
+	UP,
+	RIGHT,
+	DOWN,
+	LEFT
+}; 
+
+using Collision = std::tuple<bool, Direction, glm::vec2>; 
 
 Game::Game(unsigned int width, unsigned int height)
     : State(GAME_ACTIVE), Keys(), Width(width), Height(height), Сharges(20)
@@ -32,39 +40,24 @@ void Game::Init()
     //Загружаем все уровни
     GameLevel one; one.Load("resources/levels/one.lvl", this->Width, this->Height);
     this->Levels.push_back(one);
+
     this->CurrentLevel = 0;
 
     Renderer = new SpriteRenderer(sprite_shader);
   
 }
 
-void Game::Update(float dt)
+void Game::Update(float dt )
 {
-    for(GameObject& ball : this->Levels[this->CurrentLevel].Targets)
-         ball.Move(dt, this->Width,this->Height);
-    
-
-   // проверка всех коллизий
-    //  this->DoCollisions();
-
+    // В ходе игры мишень двигаеться и проверяет столкновение со стеной но не друг с другом
+    this->Levels[this->CurrentLevel].Update(dt, this->Width, this->Height);
+       
+   //! необходимо закончить структуру загрузки уровня
+   // проверка всех коллизий уже друг с другом
+     this->DoCollisions();
 }
 
-void Game::DoCollisions()
-{
 
-
-     for(GameObject& box1 : this->Levels[this->CurrentLevel].Targets)
-    {
-         if(box1.Position.x <=0 || (box1.Position.x + box1.Size.x) >= this->Width){
-              box1.Velocity.x = -box1.Velocity.x;
-         } 
-          if(box1.Position.y <=0 ||(box1.Position.y + box1.Size.y) >= this->Height){
-              box1.Velocity.y = -box1.Velocity.y;
-         } 
-    }
-
-
-}
 
 void Game::ProcessInput(float dt)
 {
@@ -74,7 +67,7 @@ void Game::ProcessInput(float dt)
 
 void Game::Render()
 {
-      // Renderer->DrawSprite(ResourceManager::GetTexture("background"), glm::vec2(0.0f, 0.0f), glm::vec2(this->Width, this->Height));
+      //Renderer->DrawSprite(ResourceManager::GetTexture("background"), glm::vec2(0.0f, 0.0f), glm::vec2(this->Width, this->Height));
 
       //Логигу отрисовки уровня отдаем самому уровню - вместе с настренным рисовальшиком
        this->Levels[this->CurrentLevel].Draw(*Renderer);
@@ -87,20 +80,96 @@ void Game::ResetLevel()
 
 void Game::ResetPlayer()
 {
+
+}
+//Определение столкновений
+
+Collision CheckCollision(GameObject &one, GameObject &two);
+Direction VectorDirection(glm::vec2 target);
+
+
+void Game::DoCollisions()
+{
+
+    auto size = this->Levels[this->CurrentLevel].Targets.size();
+
+    for(int i = 0; i <(size - 1); i++)
+    {
+        GameObject& current = this->Levels[this->CurrentLevel].Targets[i];
+
+        for(int j = i+1; j < size; j++)
+        {
+            GameObject& ball = this->Levels[this->CurrentLevel].Targets[j];
+            Collision collision = CheckCollision(current,ball);
+          
+            if(std::get<0>(collision)){
+                   Direction dir = std::get<1>(collision);
+                   glm::vec2 diff_vector  = std::get<2>(collision);
+
+                    if(dir == LEFT || dir == RIGHT)
+                   {
+                        current.Velocity.x = -current.Velocity.x;
+                        ball.Velocity.x = -ball.Velocity.x;
+                        float penetration = current.Radius - std::abs(diff_vector.x);
+                        if(dir == LEFT)
+                            current.Position.x += penetration;
+                        else
+                            current.Position.x -= penetration;
+                   }
+                   else
+                   {
+                       current.Velocity.y = - current.Velocity.y;
+                       ball.Velocity.y = -ball.Velocity.y;
+                       float penetration = current.Radius  - std::abs(diff_vector.y);
+                       if(dir == UP)
+                            current.Position.y -= penetration;
+                       else
+                            current.Position.y += penetration;
+                   }
+            }
+
+        }
+    }
+
 }
 
 
+Collision CheckCollision(GameObject &one, GameObject &two) // AABB - Circle collision
+{
+    //получить точку центра шара
+    glm::vec2 centerOne(one.Position + one.Radius);
+    glm::vec2 centerTwo(two.Position + two.Radius);
 
+    print(one.Radius, two.Radius);
+    // получить вектор разницы между центрами
+    glm::vec2 difference = centerOne - centerTwo;
+    
 
+    if(glm::length(difference) <= (one.Radius + two.Radius))
+        return std::make_tuple(true, VectorDirection(difference), difference);
+    else
+        return std::make_tuple(false, UP, glm::vec2(0.0f, 0.0f));
+}   
 
- //AABB collision
-bool CheckCollision(GameObject& one, GameObject& two){
-
-    // collision x -axis?
-    bool collisionX = one.Position.x + one.Size.x >= two.Position.x  && two.Position.x + two.Size.x >=one.Position.x;
-    //collison  y - axis? 
-    bool collisionY = one.Position.y + one.Size.y >= two.Position.y && two.Position.y + two.Size.y >= one.Position.y;
-    //
-    return collisionX&&collisionY;
-}
+Direction VectorDirection(glm::vec2 target)
+{
+    glm::vec2 compass[] = {
+        glm::vec2(0.0f, 1.0f),	// up
+        glm::vec2(1.0f, 0.0f),	// right
+        glm::vec2(0.0f, -1.0f),	// down
+        glm::vec2(-1.0f, 0.0f)	// left
+    };
+    float max = 0.0f;
+    unsigned int best_match = -1;
+    for (unsigned int i = 0; i < 4; i++)
+    {
+        float dot_product = glm::dot(glm::normalize(target), compass[i]);
+        if (dot_product > max)
+        {
+            max = dot_product;
+            best_match = i;
+        }
+    }
+    return (Direction)best_match;
+}    
 
