@@ -2,8 +2,11 @@
 
 #include <vector>
 
+
 #include <glad/glad.h>
 #include <glm/glm.hpp>
+
+ 
 
 #include "game_object.h"
 #include "sprite_renderer.h"
@@ -27,6 +30,8 @@ public:
     void Load(const char *file, unsigned int levelWidth, unsigned int levelHeight);
     // отрисовка всего уровня
     void Draw(SpriteRenderer &renderer);
+    
+
     //проверка на завершенное, т.е. все кирпичи уничтожены кроме неубиваемых    
     bool IsCompleted();
 private:

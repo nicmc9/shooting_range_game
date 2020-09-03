@@ -44,4 +44,6 @@ public:
     // сброс параметров 
     void ResetLevel();
     void ResetPlayer();
+
+    void DoCollisions();
 };

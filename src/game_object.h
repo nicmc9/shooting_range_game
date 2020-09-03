@@ -21,7 +21,7 @@ public:
     glm::vec2   Position, Size; 
     glm::vec3   Color;
     float       Rotation;
-
+    float  Radius;
     //состояния игровой логики
     glm::vec2   Velocity;
    
@@ -33,4 +33,5 @@ public:
     
     //содержит функцию отрисовки т.е. управляет своим рисованием
     virtual void Draw(SpriteRenderer &renderer);
+    glm::vec2 Move(float dt, unsigned int window_width,unsigned int window_height);
 };

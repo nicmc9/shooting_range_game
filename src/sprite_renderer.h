@@ -6,7 +6,7 @@
 
 #include "texture.h"
 #include "shader.h"
-
+#include "utility.hpp"
 /*
 Класс отвечающий за отрисовку спрайтов
 Создает VAO по умолчанию . а всю информацию для отрисовки
