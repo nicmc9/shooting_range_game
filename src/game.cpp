@@ -1,5 +1,7 @@
 ﻿
 #include <iostream>
+#include <cmath>
+
 #include "game.hpp"
 
 #include "utility.hpp"
@@ -23,6 +25,7 @@ Game::~Game()
     delete Renderer;
     delete Player;
     delete Stand;
+    delete Cannon;
 }
 
 void Game::Init()
@@ -57,6 +60,7 @@ void Game::Init()
     Stand = new GameObject(standPos, STAND_SIZE, ResourceManager::GetTexture("stand"));
 
     glm::vec2 cannonPos = glm::vec2( this->Width / 2.0f - CANNON_SIZE.x / 2.0f,  this->Height - CANNON_SIZE.y - STAND_SIZE.y/2);
+    
     this->Cannon = new GameObject(cannonPos, CANNON_SIZE, ResourceManager::GetTexture("cannon"));
 
 
@@ -68,9 +72,13 @@ void Game::Update(float dt )
 {
     // В ходе игры мишень двигаеться и проверяет столкновение со стеной но не друг с другом
     this->Levels[this->CurrentLevel].Update(dt, this->Width, this->Height);
-       
+
+
+
+
    //! необходимо закончить структуру загрузки уровня
    // проверка всех коллизий уже друг с другом
+    
      this->DoCollisions();
 }
 
@@ -83,7 +91,7 @@ void Game::ProcessInput(float dt)
  {
     glm::vec2 playerPos = glm::vec2(this->Width / 2.0f - PLAYER_SIZE.x / 2.0f,  this->Height/2 - PLAYER_SIZE.y);
     this->Player->Position.x = xpos - this->Player->Size.x;
-    this->Player->Position.y = ypos - this->Player->Size.y ;
+    this->Player->Position.y = ypos - this->Player->Size.y;
 
     //ПРоверка достижения границ экрана
         if(this->Player->Position.x <= 0.0f)  
@@ -94,18 +102,36 @@ void Game::ProcessInput(float dt)
             this->Player->Position.y = 0.0f;
         else if(this->Player->Position.y + this->Player->Size.y >= this->Height)
             this->Player->Position.y = this->Height - this->Player->Size.y;
+
+
+    //Обновляем также поворот пушки т.к. это имеет значение только при движениях мыши
+    glm::vec2 up = glm::vec2(0.0f, -1.0f);
+
+    glm::vec2 centre = glm::vec2(this->Width/2, this->Height);
+
+    glm::vec2 playerCentre = glm::vec2(this->Player->Position.x + (this->Player->Size.x/2) , this->Player->Position.y + (this->Player->Size.y/2) );
+    glm::vec2 direction = glm::normalize(playerCentre - centre);
+
+       
+    //atan2(AxBy - BxAy, AxBx + AyBy) упрощение для двумерного случая
+    //сокращаем т.к. up.x == 0 : glm::atan(direction.x * up.y - up.x * direction.y, direction.x * up.x+direction.y * up.y);
+    float ungle =  glm::atan(direction.x * up.y,direction.y * up.y);
+   
+    ungle = -glm::degrees(ungle); //TODO знак нужен для трансформации рендера , продумать еще раз 
+    print("ungle", ungle);
+    this->Cannon->Rotation = ungle;
 }
 
 
 void Game::Render()
 {
     //Порядок отрисовки не забывай
-    Renderer->DrawSprite(ResourceManager::GetTexture("background"), glm::vec2(0.0f, 0.0f), glm::vec2(this->Width, this->Height));
+   // Renderer->DrawSprite(ResourceManager::GetTexture("background"), glm::vec2(0.0f, 0.0f), glm::vec2(this->Width, this->Height));
     
     //Логигу отрисовки уровня отдаем самому уровню - вместе с настренным рисовальшиком
-    this->Levels[this->CurrentLevel].Draw(*Renderer);
+  //  this->Levels[this->CurrentLevel].Draw(*Renderer);
     this->Stand->Draw(*Renderer); 
-    this->Cannon->Draw(*Renderer);
+    this->Cannon->DrawOrigin(*Renderer);
     this->Player->Draw(*Renderer); 
 }
 
@@ -207,6 +233,7 @@ Collision CheckCollision(GameObject &one, GameObject &two) // AABB - Circle coll
 
 Direction VectorDirection(glm::vec2 target)
 {
+    //TODO еще раз проверить векторы
     glm::vec2 compass[] = {
         glm::vec2(0.0f, 1.0f),	// up
         glm::vec2(1.0f, 0.0f),	// right

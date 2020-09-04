@@ -45,6 +45,40 @@ void SpriteRenderer::DrawSprite(Texture2D &texture, glm::vec2 position, glm::vec
     glBindVertexArray(0);
 }
 
+//TODO объединить эти функции в одну с задание точки поворота
+void SpriteRenderer::DrawSpriteOrigin(Texture2D &texture, glm::vec2 position, glm::vec2 size, float rotate, glm::vec3 color)
+{
+   
+    //активация шейдера
+    this->shader.Use();
+    glm::mat4 model = glm::mat4(1.0f);
+
+    /*
+    Не забываем про порядок трансформаций сначала. перемещение,затем поворот, затем масшаб
+    т.к.  применяться они будут в обратном порядке
+    */
+    model = glm::translate(model, glm::vec3(position, 0.0f));  
+   
+    model = glm::translate(model, glm::vec3(0.5f * size.x, (size.y/1.5), 0.0f)); // возвращаем обратно
+    model = glm::rotate(model, glm::radians(rotate), glm::vec3(0.0f, 0.0f, 1.0f)); //поворачиваем 
+    model = glm::translate(model, glm::vec3(-0.5f * size.x, -(size.y/1.5), 0.0f)); //переность ось вращения к ценру квадрата 
+
+    model = glm::scale(model, glm::vec3(size, 1.0f)); // масштабируем
+
+    /*юниформов  модели цвета и самплера текстуры , все кроме проекции которая однакова для всех спрайто
+      поэтому в инит game класс  
+    */
+    this->shader.SetMatrix4("model", model);
+    this->shader.SetVector3f("spriteColor", color);
+
+    glActiveTexture(GL_TEXTURE0);
+    texture.Bind();
+
+    glBindVertexArray(this->quadVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
+}
+
 void SpriteRenderer::initRenderData()
 {
     // configure VAO/VBO

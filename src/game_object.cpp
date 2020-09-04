@@ -12,6 +12,11 @@ void GameObject::Draw(SpriteRenderer &renderer)
     renderer.DrawSprite(this->Sprite, this->Position, this->Size, this->Rotation, this->Color);
 }
 
+void GameObject::DrawOrigin(SpriteRenderer &renderer)
+{
+    renderer.DrawSpriteOrigin(this->Sprite, this->Position, this->Size, this->Rotation, this->Color);
+}
+
 glm::vec2 GameObject::Move(float dt, unsigned int window_width, unsigned int window_height)
 {
         //Двигаем шар
