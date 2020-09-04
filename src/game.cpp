@@ -80,7 +80,7 @@ void Game::ProcessInput(float dt)
             this->Player->Position.x = 0.0f;
         else if (this->Player->Position.x + this->Player->Size.x >= this->Width)
             this->Player->Position.x = this->Width - this->Player->Size.x;
-        else if(this->Player->Position.y <= 0.0f)
+        if(this->Player->Position.y <= 0.0f)
             this->Player->Position.y = 0.0f;
         else if(this->Player->Position.y + this->Player->Size.y >= this->Height)
             this->Player->Position.y = this->Height - this->Player->Size.y;
