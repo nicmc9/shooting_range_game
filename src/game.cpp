@@ -67,7 +67,7 @@ void Game::ProcessInput(float dt)
 
 void Game::Render()
 {
-      //Renderer->DrawSprite(ResourceManager::GetTexture("background"), glm::vec2(0.0f, 0.0f), glm::vec2(this->Width, this->Height));
+      Renderer->DrawSprite(ResourceManager::GetTexture("background"), glm::vec2(0.0f, 0.0f), glm::vec2(this->Width, this->Height));
 
       //Логигу отрисовки уровня отдаем самому уровню - вместе с настренным рисовальшиком
        this->Levels[this->CurrentLevel].Draw(*Renderer);
@@ -93,13 +93,16 @@ void Game::DoCollisions()
 
     auto size = this->Levels[this->CurrentLevel].Targets.size();
 
-    for(int i = 0; i <(size - 1); i++)
+    for(int i = 0; i <size-1 ; i++)
     {
         GameObject& current = this->Levels[this->CurrentLevel].Targets[i];
 
-        for(int j = i+1; j < size; j++)
+        for(int j = i + 1; j < size; j++)
         {
             GameObject& ball = this->Levels[this->CurrentLevel].Targets[j];
+
+            
+
             Collision collision = CheckCollision(current,ball);
           
             if(std::get<0>(collision)){
@@ -109,22 +112,37 @@ void Game::DoCollisions()
                     if(dir == LEFT || dir == RIGHT)
                    {
                         current.Velocity.x = -current.Velocity.x;
-                        ball.Velocity.x = -ball.Velocity.x;
-                        float penetration = current.Radius - std::abs(diff_vector.x);
-                        if(dir == LEFT)
-                            current.Position.x += penetration;
-                        else
+
+                        if(current.Velocity.x > 0 && ball.Velocity.x >0 ||current.Velocity.x < 0 && ball.Velocity.x <0)
+                        { 
+                            ball.Velocity.x = -ball.Velocity.x;
+                        }
+                        
+                        float penetration = (current.Radius + ball.Radius) - std::abs(diff_vector.x);
+                        if(dir == LEFT){
                             current.Position.x -= penetration;
+                        }
+                        else{
+                            current.Position.x += penetration;
+                          
+                        }
                    }
                    else
                    {
                        current.Velocity.y = - current.Velocity.y;
-                       ball.Velocity.y = -ball.Velocity.y;
-                       float penetration = current.Radius  - std::abs(diff_vector.y);
-                       if(dir == UP)
-                            current.Position.y -= penetration;
-                       else
+                       if(current.Velocity.y > 0 && ball.Velocity.y >0 ||current.Velocity.y < 0 && ball.Velocity.y <0)
+                        { 
+                            ball.Velocity.y = -ball.Velocity.y;
+                        }
+                       float penetration = (current.Radius+ball.Radius)  - std::abs(diff_vector.y);
+                       if(dir == UP){
                             current.Position.y += penetration;
+                           
+                       }
+                       else{
+                            current.Position.y -= penetration;
+                            
+                       }
                    }
             }
 
