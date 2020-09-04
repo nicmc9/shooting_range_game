@@ -15,6 +15,8 @@ enum GameState {
 };
 
 const glm::vec2 PLAYER_SIZE(50.0f, 50.0f);
+const glm::vec2 STAND_SIZE(150.0f, 50.0f);
+const glm::vec2 CANNON_SIZE(50.0f, 70.0f);
 
 class Game
 {
@@ -32,7 +34,9 @@ public:
     //!Определить время игры
   
     SpriteRenderer* Renderer = nullptr;
-    GameObject*  Player = nullptr;
+    GameObject*     Player = nullptr;
+    GameObject*     Stand = nullptr;
+    GameObject*     Cannon = nullptr;
 
     Game(unsigned int width, unsigned int height);
     ~Game();

@@ -14,7 +14,6 @@ void GameObject::Draw(SpriteRenderer &renderer)
 
 glm::vec2 GameObject::Move(float dt, unsigned int window_width, unsigned int window_height)
 {
-       
         //Двигаем шар
         this->Position += this->Velocity*dt;  //Скорость содержит и направление ее обновляем в коллизиях
         //ПРоверка достижения границ экрана

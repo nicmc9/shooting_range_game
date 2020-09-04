@@ -22,6 +22,7 @@ Game::~Game()
 {
     delete Renderer;
     delete Player;
+    delete Stand;
 }
 
 void Game::Init()
@@ -39,6 +40,8 @@ void Game::Init()
     ResourceManager::LoadTexture("resources/textures/background.png", false, "background");
     ResourceManager::LoadTexture("resources/textures/Target.png", true, "target");
     ResourceManager::LoadTexture("resources/textures/Aim.png", true, "aim");
+    ResourceManager::LoadTexture("resources/textures/Stand.png", true, "stand");
+    ResourceManager::LoadTexture("resources/textures/Cannon.png", true, "cannon");
 
 
     //Загружаем все уровни
@@ -49,9 +52,16 @@ void Game::Init()
 
     Renderer = new SpriteRenderer(sprite_shader);
     
+    //Пушка и подставка    
+    glm::vec2 standPos = glm::vec2( this->Width / 2.0f - STAND_SIZE.x / 2.0f,  this->Height - STAND_SIZE.y);
+    Stand = new GameObject(standPos, STAND_SIZE, ResourceManager::GetTexture("stand"));
+
+    glm::vec2 cannonPos = glm::vec2( this->Width / 2.0f - CANNON_SIZE.x / 2.0f,  this->Height - CANNON_SIZE.y - STAND_SIZE.y/2);
+    this->Cannon = new GameObject(cannonPos, CANNON_SIZE, ResourceManager::GetTexture("cannon"));
+
 
     glm::vec2 playerPos = glm::vec2( this->Width / 2.0f - PLAYER_SIZE.x / 2.0f,  this->Height/2 - PLAYER_SIZE.y);
-    Player = new GameObject(playerPos, PLAYER_SIZE, ResourceManager::GetTexture("aim"));
+    this->Player = new GameObject(playerPos, PLAYER_SIZE, ResourceManager::GetTexture("aim"));
 }
 
 void Game::Update(float dt )
@@ -89,12 +99,14 @@ void Game::ProcessInput(float dt)
 
 void Game::Render()
 {
-    // Renderer->DrawSprite(ResourceManager::GetTexture("background"), glm::vec2(0.0f, 0.0f), glm::vec2(this->Width, this->Height));
-
-    this->Player->Draw(*Renderer); 
+    //Порядок отрисовки не забывай
+    Renderer->DrawSprite(ResourceManager::GetTexture("background"), glm::vec2(0.0f, 0.0f), glm::vec2(this->Width, this->Height));
+    
     //Логигу отрисовки уровня отдаем самому уровню - вместе с настренным рисовальшиком
-    // this->Levels[this->CurrentLevel].Draw(*Renderer);
-
+    this->Levels[this->CurrentLevel].Draw(*Renderer);
+    this->Stand->Draw(*Renderer); 
+    this->Cannon->Draw(*Renderer);
+    this->Player->Draw(*Renderer); 
 }
 
 void Game::ResetLevel()
