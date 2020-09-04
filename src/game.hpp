@@ -5,6 +5,7 @@
 #include <vector>
 #include "sprite_renderer.h"
 #include "game_level.h"
+#include "game_object.h"
 
 //основные игровые состояния
 enum GameState {
@@ -13,6 +14,7 @@ enum GameState {
     GAME_WIN
 };
 
+const glm::vec2 PLAYER_SIZE(50.0f, 50.0f);
 
 class Game
 {
@@ -30,7 +32,7 @@ public:
     //!Определить время игры
   
     SpriteRenderer* Renderer = nullptr;
-        
+    GameObject*  Player = nullptr;
 
     Game(unsigned int width, unsigned int height);
     ~Game();
@@ -38,6 +40,7 @@ public:
     void Init();
     
     void ProcessInput(float dt);
+    void MouseInput(double xpos, double ypos);
     void Update(float dt);
     void Render();
 

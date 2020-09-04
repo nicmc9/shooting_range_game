@@ -29,7 +29,8 @@ public:
    
    
     GameObject();
-    GameObject(glm::vec2 pos, glm::vec2 size, Texture2D sprite, float radius, glm::vec3 color = glm::vec3(1.0f), glm::vec2 velocity = glm::vec2(0.0f, 0.0f));
+    GameObject(glm::vec2 pos, glm::vec2 size, Texture2D sprite, float radius = 25.0f,
+               glm::vec3 color = glm::vec3(1.0f), glm::vec2 velocity  =  glm::vec2(0.0f, 0.0f) );
     
     //содержит функцию отрисовки т.е. управляет своим рисованием
     virtual void Draw(SpriteRenderer &renderer);

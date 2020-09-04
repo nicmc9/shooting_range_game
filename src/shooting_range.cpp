@@ -10,11 +10,16 @@
 // GLFW function declerations
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+
 
 // The Width of the screen
 const unsigned int SCREEN_WIDTH = 1024;
 // The height of the screen
 const unsigned int SCREEN_HEIGHT = 768;
+
+float lastX = SCREEN_WIDTH / 2.0f;
+float lastY = SCREEN_HEIGHT / 2.0f;
 
 Game ShootingRange(SCREEN_WIDTH, SCREEN_HEIGHT);
 
@@ -43,6 +48,9 @@ int main()
 
     glfwSetKeyCallback(window, key_callback);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetCursorPos(window, lastX, lastY);
 
     // OpenGL configuration
     // --------------------
@@ -104,4 +112,10 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
    glViewport(0, 0, width, height);
+}
+
+void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
+
+	print("xpos ",xpos,"ypos", ypos);
+    ShootingRange.MouseInput(xpos, ypos);
 }

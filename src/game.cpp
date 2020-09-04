@@ -21,6 +21,7 @@ Game::Game(unsigned int width, unsigned int height)
 Game::~Game()
 {
     delete Renderer;
+    delete Player;
 }
 
 void Game::Init()
@@ -33,9 +34,12 @@ void Game::Init()
     //матрица проекции одинаковая для всех спрайтов в игре поэтому ставим здесь
     sprite_shader.SetMatrix4("projection", projection);
 
+
     //Загружаем все текстуры
     ResourceManager::LoadTexture("resources/textures/background.png", false, "background");
     ResourceManager::LoadTexture("resources/textures/Target.png", true, "target");
+    ResourceManager::LoadTexture("resources/textures/Aim.png", true, "aim");
+
 
     //Загружаем все уровни
     GameLevel one; one.Load("resources/levels/one.lvl", this->Width, this->Height);
@@ -44,7 +48,10 @@ void Game::Init()
     this->CurrentLevel = 0;
 
     Renderer = new SpriteRenderer(sprite_shader);
-  
+    
+
+    glm::vec2 playerPos = glm::vec2( this->Width / 2.0f - PLAYER_SIZE.x / 2.0f,  this->Height/2 - PLAYER_SIZE.y);
+    Player = new GameObject(playerPos, PLAYER_SIZE, ResourceManager::GetTexture("aim"));
 }
 
 void Game::Update(float dt )
@@ -57,20 +64,37 @@ void Game::Update(float dt )
      this->DoCollisions();
 }
 
-
-
 void Game::ProcessInput(float dt)
 {
 
 }
 
+ void Game::MouseInput(double xpos, double ypos)
+ {
+    glm::vec2 playerPos = glm::vec2(this->Width / 2.0f - PLAYER_SIZE.x / 2.0f,  this->Height/2 - PLAYER_SIZE.y);
+    this->Player->Position.x = xpos - this->Player->Size.x;
+    this->Player->Position.y = ypos - this->Player->Size.y ;
+
+    //ПРоверка достижения границ экрана
+        if(this->Player->Position.x <= 0.0f)  
+            this->Player->Position.x = 0.0f;
+        else if (this->Player->Position.x + this->Player->Size.x >= this->Width)
+            this->Player->Position.x = this->Width - this->Player->Size.x;
+        else if(this->Player->Position.y <= 0.0f)
+            this->Player->Position.y = 0.0f;
+        else if(this->Player->Position.y + this->Player->Size.y >= this->Height)
+            this->Player->Position.y = this->Height - this->Player->Size.y;
+}
+
 
 void Game::Render()
 {
-      Renderer->DrawSprite(ResourceManager::GetTexture("background"), glm::vec2(0.0f, 0.0f), glm::vec2(this->Width, this->Height));
+    // Renderer->DrawSprite(ResourceManager::GetTexture("background"), glm::vec2(0.0f, 0.0f), glm::vec2(this->Width, this->Height));
 
-      //Логигу отрисовки уровня отдаем самому уровню - вместе с настренным рисовальшиком
-       this->Levels[this->CurrentLevel].Draw(*Renderer);
+    this->Player->Draw(*Renderer); 
+    //Логигу отрисовки уровня отдаем самому уровню - вместе с настренным рисовальшиком
+    // this->Levels[this->CurrentLevel].Draw(*Renderer);
+
 }
 
 void Game::ResetLevel()
@@ -158,7 +182,7 @@ Collision CheckCollision(GameObject &one, GameObject &two) // AABB - Circle coll
     glm::vec2 centerOne(one.Position + one.Radius);
     glm::vec2 centerTwo(two.Position + two.Radius);
 
-    print(one.Radius, two.Radius);
+    
     // получить вектор разницы между центрами
     glm::vec2 difference = centerOne - centerTwo;
     
