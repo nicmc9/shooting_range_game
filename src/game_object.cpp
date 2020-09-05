@@ -37,9 +37,9 @@ glm::vec2 GameObject::Move(float dt, unsigned int window_width, unsigned int win
             this->Velocity.y = - this->Velocity.y;
             this->Position.y = 0.0f;
         }
-        else if(this->Position.y + this->Size.y >= window_height){
+        else if(this->Position.y + this->Size.y >= window_height-this->Size.y){
             this->Velocity.y = - this->Velocity.y;
-            this->Position.y = window_height - this->Size.y;
+            this->Position.y = window_height - this->Size.y*2;
         }
         //от нижней границы не отталкиваемся это потеря жизни
     

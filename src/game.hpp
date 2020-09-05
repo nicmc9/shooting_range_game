@@ -7,6 +7,7 @@
 #include "game_level.h"
 #include "game_object.h"
 #include "bullet_object.hpp"
+#include "text_renderer.hpp"
 
 //основные игровые состояния
 enum GameState {
@@ -48,6 +49,7 @@ public:
     GameObject*     Player = nullptr;
     GameObject*     Stand = nullptr;
     GameObject*     Cannon = nullptr;
+    TextRenderer*   Text = nullptr;
 
     Game(unsigned int width, unsigned int height);
     ~Game();

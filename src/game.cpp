@@ -26,6 +26,7 @@ Game::~Game()
     delete Player;
     delete Stand;
     delete Cannon;
+    delete Text;
 }
 
 void Game::Init()
@@ -38,7 +39,6 @@ void Game::Init()
     //матрица проекции одинаковая для всех спрайтов в игре поэтому ставим здесь
     sprite_shader.SetMatrix4("projection", projection);
 
-
     //Загружаем все текстуры
     ResourceManager::LoadTexture("resources/textures/background.png", false, "background");
     ResourceManager::LoadTexture("resources/textures/Target.png", true, "target");
@@ -47,10 +47,14 @@ void Game::Init()
     ResourceManager::LoadTexture("resources/textures/Cannon.png", true, "cannon");
     ResourceManager::LoadTexture("resources/textures/Cannonball.png", true, "cannonball");
 
+    Text = new TextRenderer(this->Width, this->Height);
+    Text->Load("resources/fonts/OCRAEXT.TTF", 24);
 
     //Загружаем все уровни
     GameLevel one; one.Load("resources/levels/one.lvl", this->Width, this->Height);
+    GameLevel two; two.Load("resources/levels/two.lvl", this->Width, this->Height);
     this->Levels.push_back(one);
+    this->Levels.push_back(two);
     this->CurrentLevel = 0;
 
     Renderer = new SpriteRenderer(sprite_shader);
@@ -74,6 +78,9 @@ void Game::Init()
     for(int i = 0; i < 3 ; i++){
         this->Shots.emplace_back(BulletObject(bulletPos,  ResourceManager::GetTexture("cannonball"), bulletPos, BULLET_SIZE.x/2));
     }
+
+
+
 }
 
 void Game::Update(float dt )
@@ -99,11 +106,53 @@ void Game::Update(float dt )
     auto& targets = this->Levels[this->CurrentLevel].Targets;
     targets.erase(std::remove_if(targets.begin(), targets.end(), [](const auto& target) { return target.Destroyed; }), targets.end());
 
-     this->DoCollisions();
+    if (this->State == GAME_ACTIVE && targets.size()==0)
+    {
+        this->ResetLevel();
+        this->ResetPlayer();
+        this->State = GAME_WIN;
+    }
+    
+    
+    this->DoCollisions();
+
+
 }
 
 void Game::ProcessInput(float dt)
 {
+
+if (this->State == GAME_MENU)
+{
+    if (this->Keys[GLFW_KEY_ENTER] && !this->KeysProcessed[GLFW_KEY_ENTER])
+        {
+            this->State = GAME_ACTIVE;
+            this->KeysProcessed[GLFW_KEY_ENTER] = true;
+        }
+    if (this->Keys[GLFW_KEY_W] && !this->KeysProcessed[GLFW_KEY_W])
+        {
+            this->CurrentLevel = (this->CurrentLevel + 1) % 2; //Этого достаточно чтобы поменять отрисовку уровня 
+            this->KeysProcessed[GLFW_KEY_W] = true;
+        }
+    if (this->Keys[GLFW_KEY_S] && !this->KeysProcessed[GLFW_KEY_S])
+        {
+           if (this->CurrentLevel > 0)
+            --this->CurrentLevel;
+           else
+            this->CurrentLevel = 1;
+            this->KeysProcessed[GLFW_KEY_S] = true;
+        }
+ }  
+
+
+ if (this->State == GAME_WIN)
+    {
+        if (this->Keys[GLFW_KEY_ENTER])
+        {
+            this->KeysProcessed[GLFW_KEY_ENTER] = true; //Иначе сразу запустит уровень, без входа в меню
+            this->State = GAME_MENU;
+        }
+    }    
 
 }
 
@@ -140,24 +189,28 @@ void Game::ProcessInput(float dt)
 
 void Game::MouseButtonClick(){
 
-   if(this->CannonReloadTime > 0) return;
+if (this->State == GAME_ACTIVE)
+    {
+          if(this->CannonReloadTime > 0) return;
 
-   glm::vec2 playerPos =  glm::vec2(this->Player->Position.x, this->Player->Position.y);
+          glm::vec2 playerPos =  glm::vec2(this->Player->Position.x, this->Player->Position.y);
    
-   for(BulletObject& shot : this->Shots){
-        if (!shot.Spawned) {
+         for(BulletObject& shot : this->Shots){
+            if (!shot.Spawned) {
          
-            shot.Velocity =  glm::normalize(playerPos - shot.StartPosition) * BULLET_STREIGHT;
-            shot.Spawned = true;
-            this->CannonReloadTime = 1.0; // выстрел ставим время 
-            break;      
-        } 
-    }
-
+              shot.Velocity =  glm::normalize(playerPos - shot.StartPosition) * BULLET_STREIGHT;
+              shot.Spawned = true;
+              this->CannonReloadTime = 1.0; // выстрел ставим время 
+             break;      
+          } 
+       }
+   }
 }
 
 void Game::Render()
 {
+      if(this->State == GAME_ACTIVE|| this->State == GAME_MENU || this->State == GAME_WIN)
+    {
     //Порядок отрисовки не забывай
     Renderer->DrawSprite(ResourceManager::GetTexture("background"), glm::vec2(0.0f, 0.0f), glm::vec2(this->Width, this->Height));
     
@@ -171,12 +224,29 @@ void Game::Render()
     this->Stand->Draw(*Renderer); 
     this->Cannon->DrawOrigin(*Renderer);      
 
-     this->Player->Draw(*Renderer);      
+     this->Player->Draw(*Renderer);   
+
+    }
+
+      if (this->State == GAME_MENU)
+    {
+        Text->RenderText("Press ENTER to start", 380.0f, this->Height / 2, 1.0,   glm::vec3(1.0f, 0.0f, 1.0f));
+        Text->RenderText("Press W or S to select level", 330.0f, this->Height / 2 + 20.0f, 1.0, glm::vec3(1.0f, 0.0f, 1.0f) );
+    }
+
+     if (this->State == GAME_WIN)
+    {
+         Text->RenderText("You WON!!!", 460.0, this->Height / 2 - 20.0, 1.0, glm::vec3(1.0f, 0.0f, 1.0f)  );
+        Text->RenderText("Press ENTER to retry or ESC to quit", 280.0, this->Height / 2, 1.0, glm::vec3(1.0f, 0.0f, 1.0f)  );
+    }     
 }
 
 void Game::ResetLevel()
 {
-
+    if (this->CurrentLevel == 0)
+        this->Levels[0].Load("resources/levels/one.lvl", this->Width, this->Height);
+    else if (this->CurrentLevel == 1)
+        this->Levels[1].Load("resources/levels/two.lvl", this->Width, this->Height);
 }
 
 void Game::ResetPlayer()
@@ -194,6 +264,8 @@ void Game::DoCollisions()
 
      //проверка коллизий между целями
     auto size = this->Levels[this->CurrentLevel].Targets.size();
+
+    if(size == 0) return; 
 
     for(int i = 0; i < size-1 ; i++)
     {
