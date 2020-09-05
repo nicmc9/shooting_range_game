@@ -19,7 +19,7 @@ const glm::vec2 PLAYER_SIZE(50.0f, 50.0f);
 const glm::vec2 STAND_SIZE(150.0f, 50.0f);
 const glm::vec2 CANNON_SIZE(50.0f, 70.0f);
 const glm::vec2 BULLET_SIZE(30.0f, 30.0f);
-const float BULLET_STREIGHT{350.0f};
+const float     BULLET_STREIGHT{450.0f};
 
 class Game
 {

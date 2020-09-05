@@ -25,7 +25,7 @@ public:
     ~BulletObject() = default;
 
    glm::vec2 Move(float dt, unsigned int window_width,unsigned int window_height) override;
-
+   void      Reset();
 };
 
 

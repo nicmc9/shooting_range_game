@@ -1,5 +1,6 @@
 ﻿#include <iostream>
-#include <cmath>
+
+#include <algorithm>
 
 #include "game.hpp"
 
@@ -80,7 +81,6 @@ void Game::Update(float dt )
     // В ходе игры мишень двигаеться и проверяет столкновение со стеной но не друг с другом
     this->Levels[this->CurrentLevel].Update(dt, this->Width, this->Height);
 
-
    for(BulletObject& shot : this->Shots)
         if (!shot.Destroyed && shot.Spawned)  
             shot.Move(dt, this->Width, this->Height);
@@ -92,6 +92,13 @@ void Game::Update(float dt )
    //! необходимо закончить структуру загрузки уровня
    // проверка всех коллизий уже друг с другом
     
+
+    
+    // Удаляем все уничтоженные цели 
+
+    auto& targets = this->Levels[this->CurrentLevel].Targets;
+    targets.erase(std::remove_if(targets.begin(), targets.end(), [](const auto& target) { return target.Destroyed; }), targets.end());
+
      this->DoCollisions();
 }
 
@@ -152,22 +159,19 @@ void Game::MouseButtonClick(){
 void Game::Render()
 {
     //Порядок отрисовки не забывай
-   // Renderer->DrawSprite(ResourceManager::GetTexture("background"), glm::vec2(0.0f, 0.0f), glm::vec2(this->Width, this->Height));
+    Renderer->DrawSprite(ResourceManager::GetTexture("background"), glm::vec2(0.0f, 0.0f), glm::vec2(this->Width, this->Height));
     
     //Логигу отрисовки уровня отдаем самому уровню - вместе с настренным рисовальшиком
-  //  this->Levels[this->CurrentLevel].Draw(*Renderer);
+    this->Levels[this->CurrentLevel].Draw(*Renderer);
     
-   
-
-    
-
-    this->Stand->Draw(*Renderer); 
-    this->Cannon->DrawOrigin(*Renderer);        
-    this->Player->Draw(*Renderer); 
-
     for(BulletObject& shot : this->Shots)
         if (!shot.Destroyed && shot.Spawned)  
             shot.Draw(*Renderer);
+
+    this->Stand->Draw(*Renderer); 
+    this->Cannon->DrawOrigin(*Renderer);      
+
+     this->Player->Draw(*Renderer);      
 }
 
 void Game::ResetLevel()
@@ -188,17 +192,16 @@ Direction VectorDirection(glm::vec2 target);
 void Game::DoCollisions()
 {
 
+     //проверка коллизий между целями
     auto size = this->Levels[this->CurrentLevel].Targets.size();
 
-    for(int i = 0; i <size-1 ; i++)
+    for(int i = 0; i < size-1 ; i++)
     {
         GameObject& current = this->Levels[this->CurrentLevel].Targets[i];
 
         for(int j = i + 1; j < size; j++)
         {
             GameObject& ball = this->Levels[this->CurrentLevel].Targets[j];
-
-            
 
             Collision collision = CheckCollision(current,ball);
           
@@ -245,6 +248,24 @@ void Game::DoCollisions()
 
         }
     }
+
+    //проверка коллизий с ядром
+
+    for(auto& shot: this->Shots){
+           if(shot.Spawned){
+               for(auto& target: this->Levels[this->CurrentLevel].Targets){
+
+                Collision collision = CheckCollision(shot, target);
+                    if(std::get<0>(collision)){  //TODO Добавить звуки и счетчики
+                        shot.Reset();
+                        target.Destroyed = true;
+                    }
+               }
+
+           } 
+
+    }
+ 
 
 }
 
