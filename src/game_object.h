@@ -29,11 +29,13 @@ public:
    
    
     GameObject();
-    GameObject(glm::vec2 pos, glm::vec2 size, Texture2D sprite, float radius = 25.0f,
+    GameObject(glm::vec2 pos, glm::vec2 size, Texture2D sprite, float radius = 0.0f,
                glm::vec3 color = glm::vec3(1.0f), glm::vec2 velocity  =  glm::vec2(0.0f, 0.0f) );
+    virtual ~GameObject() = default;
+
     
     //содержит функцию отрисовки т.е. управляет своим рисованием
     virtual void Draw(SpriteRenderer &renderer);
     virtual void DrawOrigin(SpriteRenderer &renderer);
-    glm::vec2 Move(float dt, unsigned int window_width,unsigned int window_height);
+    virtual glm::vec2 Move(float dt, unsigned int window_width,unsigned int window_height);
 };

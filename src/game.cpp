@@ -1,5 +1,4 @@
-﻿
-#include <iostream>
+﻿#include <iostream>
 #include <cmath>
 
 #include "game.hpp"
@@ -45,12 +44,12 @@ void Game::Init()
     ResourceManager::LoadTexture("resources/textures/Aim.png", true, "aim");
     ResourceManager::LoadTexture("resources/textures/Stand.png", true, "stand");
     ResourceManager::LoadTexture("resources/textures/Cannon.png", true, "cannon");
+    ResourceManager::LoadTexture("resources/textures/Cannonball.png", true, "cannonball");
 
 
     //Загружаем все уровни
     GameLevel one; one.Load("resources/levels/one.lvl", this->Width, this->Height);
     this->Levels.push_back(one);
-
     this->CurrentLevel = 0;
 
     Renderer = new SpriteRenderer(sprite_shader);
@@ -61,13 +60,18 @@ void Game::Init()
 
     glm::vec2 cannonPos = glm::vec2( this->Width / 2.0f - CANNON_SIZE.x / 2.0f,  this->Height - CANNON_SIZE.y - STAND_SIZE.y/2);
     this->Cannon = new GameObject(cannonPos, CANNON_SIZE, ResourceManager::GetTexture("cannon"));
-
-
-    this->CentreRot = glm::vec2( this->Width / 2.0f,  cannonPos.y + CANNON_SIZE.y);
+    this->CannonDownPoint = glm::vec2( this->Width / 2.0f,  cannonPos.y + CANNON_SIZE.y);
 
 
     glm::vec2 playerPos = glm::vec2( this->Width / 2.0f - PLAYER_SIZE.x / 2.0f,  this->Height/2 - PLAYER_SIZE.y);
-    this->Player = new GameObject(playerPos, PLAYER_SIZE, ResourceManager::GetTexture("aim"));
+    this->Player = new GameObject(playerPos, PLAYER_SIZE, ResourceManager::GetTexture("aim"),PLAYER_SIZE.x/2);
+
+    //пока сделаем 3 снаряда    
+
+    glm::vec2 bulletPos = glm::vec2( this->Width / 2.0f - BULLET_SIZE.x / 2.0f,  this->Height - BULLET_SIZE.y- STAND_SIZE.y/2);
+    for(int i = 0; i < 3 ; i++){
+        this->Shots.emplace_back(BulletObject(bulletPos,  ResourceManager::GetTexture("cannonball"), bulletPos, BULLET_SIZE.x/2));
+    }
 }
 
 void Game::Update(float dt )
@@ -76,6 +80,9 @@ void Game::Update(float dt )
     this->Levels[this->CurrentLevel].Update(dt, this->Width, this->Height);
 
 
+   for(BulletObject& shot : this->Shots)
+        if (!shot.Destroyed && shot.Spawned)  
+            shot.Move(dt, this->Width, this->Height);
 
 
    //! необходимо закончить структуру загрузки уровня
@@ -105,24 +112,34 @@ void Game::ProcessInput(float dt)
         else if(this->Player->Position.y + this->Player->Size.y >= this->Height)
             this->Player->Position.y = this->Height - this->Player->Size.y;
 
-
     //Обновляем также поворот пушки т.к. это имеет значение только при движениях мыши
     glm::vec2 up = glm::vec2(0.0f, -1.0f);
  
-
     glm::vec2 playerCentre = glm::vec2(this->Player->Position.x + (this->Player->Size.x/2) , this->Player->Position.y + (this->Player->Size.y/2) );
-    glm::vec2 direction = glm::normalize(playerCentre - this->CentreRot);
-
+    glm::vec2 direction = glm::normalize(playerCentre - this->CannonDownPoint);
        
     //atan2(AxBy - BxAy, AxBx + AyBy) упрощение для двумерного случая
     //сокращаем т.к. up.x == 0 : glm::atan(direction.x * up.y - up.x * direction.y, direction.x * up.x+direction.y * up.y);
     float ungle =  glm::atan(direction.x * up.y,direction.y * up.y);
    
     ungle = -glm::degrees(ungle); //TODO знак нужен для трансформации рендера , продумать еще раз 
-    print("ungle", ungle);
+    //print("ungle", ungle);
     this->Cannon->Rotation = ungle;
 }
 
+void Game::MouseButtonClick(){
+   glm::vec2 playerPos =  glm::vec2(this->Player->Position.x, this->Player->Position.y);
+   
+   for(BulletObject& shot : this->Shots){
+        if (!shot.Spawned) {
+         
+            shot.Velocity =  glm::normalize(playerPos - shot.StartPosition) * BULLET_STREIGHT;
+            shot.Spawned = true; 
+            break;      
+        } 
+    }
+
+}
 
 void Game::Render()
 {
@@ -131,9 +148,18 @@ void Game::Render()
     
     //Логигу отрисовки уровня отдаем самому уровню - вместе с настренным рисовальшиком
   //  this->Levels[this->CurrentLevel].Draw(*Renderer);
+    
+   
+
+    
+
     this->Stand->Draw(*Renderer); 
-    this->Cannon->DrawOrigin(*Renderer);
+    this->Cannon->DrawOrigin(*Renderer);        
     this->Player->Draw(*Renderer); 
+
+    for(BulletObject& shot : this->Shots)
+        if (!shot.Destroyed && shot.Spawned)  
+            shot.Draw(*Renderer);
 }
 
 void Game::ResetLevel()

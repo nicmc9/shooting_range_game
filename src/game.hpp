@@ -6,6 +6,7 @@
 #include "sprite_renderer.h"
 #include "game_level.h"
 #include "game_object.h"
+#include "bullet_object.hpp"
 
 //основные игровые состояния
 enum GameState {
@@ -17,6 +18,8 @@ enum GameState {
 const glm::vec2 PLAYER_SIZE(50.0f, 50.0f);
 const glm::vec2 STAND_SIZE(150.0f, 50.0f);
 const glm::vec2 CANNON_SIZE(50.0f, 70.0f);
+const glm::vec2 BULLET_SIZE(30.0f, 30.0f);
+const float BULLET_STREIGHT{350.0f};
 
 class Game
 {
@@ -32,7 +35,12 @@ public:
     //Заряды должны быть частью уровня, как и количество мишеней например и другие настройки
     unsigned int Сharges;
 
-    glm::vec2 CentreRot;
+    glm::vec2 CannonDownPoint;
+
+
+    std::vector<BulletObject> Shots;
+
+
     //!Определить время игры
   
     SpriteRenderer* Renderer = nullptr;
@@ -47,6 +55,7 @@ public:
     
     void ProcessInput(float dt);
     void MouseInput(double xpos, double ypos);
+    void MouseButtonClick();
     void Update(float dt);
     void Render();
 

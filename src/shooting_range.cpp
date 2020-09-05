@@ -11,7 +11,7 @@
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
-
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 
 // The Width of the screen
 const unsigned int SCREEN_WIDTH = 1024;
@@ -51,6 +51,8 @@ int main()
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
     glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetCursorPos(window, lastX, lastY);
+    glfwSetMouseButtonCallback(window, mouse_button_callback);
+
 
     // OpenGL configuration
     // --------------------
@@ -118,4 +120,11 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 
 	//print("xpos ",xpos,"ypos", ypos);
     ShootingRange.MouseInput(xpos, ypos);
+}
+
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods){
+
+    if(button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+        ShootingRange.MouseButtonClick();
+    
 }

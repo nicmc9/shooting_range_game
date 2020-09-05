@@ -2,7 +2,7 @@
 
 
 GameObject::GameObject() 
-    : Position(0.0f, 0.0f), Size(1.0f, 1.0f), Velocity(0.0f), Color(1.0f), Rotation(0.0f), Radius(25.0f), Sprite(), Destroyed(false), Spawned(true) { }
+    : Position(0.0f, 0.0f), Size(1.0f, 1.0f), Velocity(0.0f), Color(1.0f), Rotation(0.0f), Radius(0.0f), Sprite(), Destroyed(false), Spawned(true) { }
 
 GameObject::GameObject(glm::vec2 pos, glm::vec2 size, Texture2D sprite, float radius, glm::vec3 color, glm::vec2 velocity) 
     : Position(pos), Size(size), Velocity(velocity), Color(color), Rotation(0.0f), Sprite(sprite),Radius(radius), Destroyed(false), Spawned(true) { }
