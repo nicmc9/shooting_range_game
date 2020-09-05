@@ -61,6 +61,7 @@ void Game::Init()
     glm::vec2 cannonPos = glm::vec2( this->Width / 2.0f - CANNON_SIZE.x / 2.0f,  this->Height - CANNON_SIZE.y - STAND_SIZE.y/2);
     this->Cannon = new GameObject(cannonPos, CANNON_SIZE, ResourceManager::GetTexture("cannon"));
     this->CannonDownPoint = glm::vec2( this->Width / 2.0f,  cannonPos.y + CANNON_SIZE.y);
+    this->CannonReloadTime = 0.0f; // 0 Можно стрелять после выстрела  увеличиваем
 
 
     glm::vec2 playerPos = glm::vec2( this->Width / 2.0f - PLAYER_SIZE.x / 2.0f,  this->Height/2 - PLAYER_SIZE.y);
@@ -84,6 +85,9 @@ void Game::Update(float dt )
         if (!shot.Destroyed && shot.Spawned)  
             shot.Move(dt, this->Width, this->Height);
 
+    //Обновляем возможность выстрела
+    this->CannonReloadTime -= dt;
+    if(this->CannonReloadTime < 0) this->CannonReloadTime = 0.0f; //TODO  изменить послерасчета столкновений со снарядом
 
    //! необходимо закончить структуру загрузки уровня
    // проверка всех коллизий уже друг с другом
@@ -128,13 +132,17 @@ void Game::ProcessInput(float dt)
 }
 
 void Game::MouseButtonClick(){
+
+   if(this->CannonReloadTime > 0) return;
+
    glm::vec2 playerPos =  glm::vec2(this->Player->Position.x, this->Player->Position.y);
    
    for(BulletObject& shot : this->Shots){
         if (!shot.Spawned) {
          
             shot.Velocity =  glm::normalize(playerPos - shot.StartPosition) * BULLET_STREIGHT;
-            shot.Spawned = true; 
+            shot.Spawned = true;
+            this->CannonReloadTime = 1.0; // выстрел ставим время 
             break;      
         } 
     }

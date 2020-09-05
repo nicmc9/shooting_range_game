@@ -36,6 +36,7 @@ public:
     unsigned int Сharges;
 
     glm::vec2 CannonDownPoint;
+    float CannonReloadTime;
 
 
     std::vector<BulletObject> Shots;
