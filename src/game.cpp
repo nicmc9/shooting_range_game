@@ -1,9 +1,7 @@
 ﻿#include <iostream>
-
 #include <algorithm>
 
 #include "game.h"
-
 #include "utility.h"
 
 enum Direction {
@@ -16,7 +14,7 @@ enum Direction {
 using Collision = std::tuple<bool, Direction, glm::vec2>; 
 
 Game::Game(unsigned int width, unsigned int height)
-    : State(GAME_ACTIVE), Keys(), Width(width), Height(height), Сharges(20)
+    : state_(GameState::kGameActive), keys_(), screen_width_(width), screen_height_(height)
 {
 }
 
@@ -29,11 +27,19 @@ Game::~Game()
     delete Text;
 }
 
+///getters and setter
+
+auto& Game::targets()   {    return levels_[current_level_].Targets;   }
+void Game::set_state(GameState state)    {       state_ = state;       }
+void Game::set_keys(int key, bool state) {       keys_[key]  = state;  }
+void Game::set_keys_processed(int key, bool state) {       keys_processed_[key]  = state;  }
+
+
 void Game::Init()
 {
     Shader sprite_shader = ResourceManager::LoadShader("resources/shaders/sprite.vs", "resources/shaders/sprite.fs", nullptr, "sprite");
    
-    glm::mat4 projection = glm::ortho(0.0f, static_cast<float>(this->Width), static_cast<float>(this->Height), 0.0f, -1.0f, 1.0f);
+    glm::mat4 projection = glm::ortho(0.0f, static_cast<float>(screen_width_), static_cast<float>(screen_height_), 0.0f, -1.0f, 1.0f);
     //uniform sampler2D image; индекс в наборе текстур для данного семплера, т.к всегда одна текстура ставим это здесь
     sprite_shader.Use().SetInteger("image", 0);
     //матрица проекции одинаковая для всех спрайтов в игре поэтому ставим здесь
@@ -47,36 +53,37 @@ void Game::Init()
     ResourceManager::LoadTexture("resources/textures/Cannon.png", true, "cannon");
     ResourceManager::LoadTexture("resources/textures/Cannonball.png", true, "cannonball");
 
-    Text = new TextRenderer(this->Width, this->Height);
+    Text = new TextRenderer(screen_width_, screen_height_);
     Text->Load("resources/fonts/OCRAEXT.TTF", 24);
 
     //Загружаем все уровни
-    GameLevel one; one.Load("resources/levels/one.lvl", this->Width, this->Height);
-    GameLevel two; two.Load("resources/levels/two.lvl", this->Width, this->Height);
-    this->Levels.push_back(one);
-    this->Levels.push_back(two);
-    this->CurrentLevel = 0;
+    GameLevel one; one.Load("resources/levels/one.lvl", screen_width_, screen_height_);
+    GameLevel two; two.Load("resources/levels/two.lvl", screen_width_, screen_height_);
+    levels_.push_back(one);
+    levels_.push_back(two);
+    current_level_ = 0;
 
     Renderer = new SpriteRenderer(sprite_shader);
     
     //Пушка и подставка    
-    glm::vec2 standPos = glm::vec2( this->Width / 2.0f - STAND_SIZE.x / 2.0f,  this->Height - STAND_SIZE.y);
-    Stand = new GameObject(standPos, STAND_SIZE, ResourceManager::GetTexture("stand"));
+    glm::vec2 stand_pos = glm::vec2(screen_width_ / 2.0f - kStandSize.x / 2.0f,screen_height_ - kStandSize.y);
+    Stand = new GameObject(stand_pos, kStandSize, ResourceManager::GetTexture("stand"));
 
-    glm::vec2 cannonPos = glm::vec2( this->Width / 2.0f - CANNON_SIZE.x / 2.0f,  this->Height - CANNON_SIZE.y - STAND_SIZE.y/2);
-    this->Cannon = new GameObject(cannonPos, CANNON_SIZE, ResourceManager::GetTexture("cannon"));
-    this->CannonDownPoint = glm::vec2( this->Width / 2.0f,  cannonPos.y + CANNON_SIZE.y);
-    this->CannonReloadTime = 0.0f; // 0 Можно стрелять после выстрела  увеличиваем
+    glm::vec2 cannon_pos = glm::vec2(screen_width_ / 2.0f - kCannonSize.x / 2.0f, screen_height_ - kCannonSize.y - kStandSize.y/2);
+    Cannon = new GameObject(cannon_pos, kCannonSize, ResourceManager::GetTexture("cannon"));
+    cannon_down_point_ = glm::vec2(screen_width_ / 2.0f,  cannon_pos.y + kCannonSize.y);
+    cannon_reload_time_ = 0.0f; // 0 Можно стрелять после выстрела  увеличиваем
 
 
-    glm::vec2 playerPos = glm::vec2( this->Width / 2.0f - PLAYER_SIZE.x / 2.0f,  this->Height/2 - PLAYER_SIZE.y);
-    this->Player = new GameObject(playerPos, PLAYER_SIZE, ResourceManager::GetTexture("aim"),PLAYER_SIZE.x/2);
+    glm::vec2 player_pos = glm::vec2(screen_width_ / 2.0f - kPlayerSize.x / 2.0f,  screen_height_/2 - kPlayerSize.y);
+    Player = new GameObject(player_pos, kPlayerSize, ResourceManager::GetTexture("aim"), kPlayerSize.x/2);
 
     //пока сделаем 3 снаряда    
 
-    glm::vec2 bulletPos = glm::vec2( this->Width / 2.0f - BULLET_SIZE.x / 2.0f,  this->Height - BULLET_SIZE.y- STAND_SIZE.y/2);
+    glm::vec2 bullet_pos = glm::vec2(screen_width_ / 2.0f - kBulletSize.x / 2.0f,  screen_height_ - kBulletSize.y- kStandSize.y/2);
+    //Пока делаем 3 возможных снаряда
     for(int i = 0; i < 3 ; i++){
-        this->Shots.emplace_back(BulletObject(bulletPos,  ResourceManager::GetTexture("cannonball"), bulletPos, BULLET_SIZE.x/2));
+        cannon_balls_.emplace_back(BulletObject(bullet_pos,  ResourceManager::GetTexture("cannonball"), bullet_pos, kBulletSize.x/2));
     }
 
 
@@ -86,70 +93,64 @@ void Game::Init()
 void Game::Update(float dt )
 {
     // В ходе игры мишень двигаеться и проверяет столкновение со стеной но не друг с другом
-    this->Levels[this->CurrentLevel].Update(dt, this->Width, this->Height);
+    levels_[current_level_].Update(dt, screen_width_, screen_height_);
 
-   for(BulletObject& shot : this->Shots)
-        if (!shot.Destroyed && shot.Spawned)  
-            shot.Move(dt, this->Width, this->Height);
+   for(auto& cannon_ball : cannon_balls_)
+        if (!cannon_ball.Destroyed && cannon_ball.Spawned)  
+            cannon_ball.Move(dt, screen_width_, screen_height_);
 
     //Обновляем возможность выстрела
-    this->CannonReloadTime -= dt;
-    if(this->CannonReloadTime < 0) this->CannonReloadTime = 0.0f; //TODO  изменить послерасчета столкновений со снарядом
+    cannon_reload_time_ -= dt;
+    if(cannon_reload_time_ < 0) cannon_reload_time_ = 0.0f; //TODO  изменить послерасчета столкновений со снарядом
 
    //! необходимо закончить структуру загрузки уровня
    // проверка всех коллизий уже друг с другом
-    
+   // Удаляем все уничтоженные цели 
 
-    
-    // Удаляем все уничтоженные цели 
+    auto destroed = [](const auto& target) { return target.Destroyed; };
+    targets().erase(std::remove_if(targets().begin(), targets().end(), destroed), targets().end());
 
-    auto& targets = this->Levels[this->CurrentLevel].Targets;
-    targets.erase(std::remove_if(targets.begin(), targets.end(), [](const auto& target) { return target.Destroyed; }), targets.end());
-
-    if (this->State == GAME_ACTIVE && targets.size()==0)
+    if (state_ == GameState::kGameActive && targets().size()==0)
     {
-        this->ResetLevel();
-        this->ResetPlayer();
-        this->State = GAME_WIN;
+        ResetLevel();
+        ResetPlayer();
+        state_ = GameState::kGameWin;
     }
-    
-    
-    this->DoCollisions();
-
-
+ 
+   DoCollisions();
 }
 
 void Game::ProcessInput(float dt)
 {
 
-if (this->State == GAME_MENU)
+if (state_ == GameState::kGameMenu)
 {
-    if (this->Keys[GLFW_KEY_ENTER] && !this->KeysProcessed[GLFW_KEY_ENTER])
+    if (keys_[GLFW_KEY_ENTER] && !keys_processed_[GLFW_KEY_ENTER])
         {
-            this->State = GAME_ACTIVE;
-            this->KeysProcessed[GLFW_KEY_ENTER] = true;
+            state_ = GameState::kGameActive;
+            keys_processed_[GLFW_KEY_ENTER] = true;
         }
-    if (this->Keys[GLFW_KEY_W] && !this->KeysProcessed[GLFW_KEY_W])
+    if (keys_[GLFW_KEY_W] && !keys_processed_[GLFW_KEY_W])
         {
-            this->CurrentLevel = (this->CurrentLevel + 1) % 2; //Этого достаточно чтобы поменять отрисовку уровня 
-            this->KeysProcessed[GLFW_KEY_W] = true;
+           current_level_ = (current_level_ + 1) % 2; //Этого достаточно чтобы поменять отрисовку уровня 
+           keys_processed_[GLFW_KEY_W] = true;
         }
-    if (this->Keys[GLFW_KEY_S] && !this->KeysProcessed[GLFW_KEY_S])
+    if (keys_[GLFW_KEY_S] && !keys_processed_[GLFW_KEY_S])
         {
-           if (this->CurrentLevel > 0)
-            --this->CurrentLevel;
+           if (current_level_ > 0)
+            --current_level_;
            else
-            this->CurrentLevel = 1;
-            this->KeysProcessed[GLFW_KEY_S] = true;
+            current_level_ = 1;
+            keys_processed_[GLFW_KEY_S] = true;
         }
 }  
 
-if (this->State == GAME_WIN)
+if (state_ == GameState::kGameWin)
     {
-        if (this->Keys[GLFW_KEY_ENTER])
+        if (keys_[GLFW_KEY_ENTER])
         {
-            this->KeysProcessed[GLFW_KEY_ENTER] = true; //Иначе сразу запустит уровень, без входа в меню
-            this->State = GAME_MENU;
+            keys_processed_[GLFW_KEY_ENTER] = true; //Иначе сразу запустит уровень, без входа в меню
+            state_ = GameState::kGameMenu;
         }
     }    
 
@@ -157,50 +158,51 @@ if (this->State == GAME_WIN)
 
 void Game::MouseInput(double xpos, double ypos)
 {
-    glm::vec2 playerPos = glm::vec2(this->Width / 2.0f - PLAYER_SIZE.x / 2.0f,  this->Height/2 - PLAYER_SIZE.y);
-    this->Player->Position.x = xpos - this->Player->Size.x/2;
-    this->Player->Position.y = ypos - this->Player->Size.y/2;
+    //glm::vec2 playerPos = glm::vec2(screen_width_ / 2.0f - kPlayerSize.x / 2.0f, screen_height_/2 - kPlayerSize.y);
+
+    Player->Position.x = xpos - Player->Size.x/2;
+    Player->Position.y = ypos - Player->Size.y/2;
 
     //ПРоверка достижения границ экрана
-        if(this->Player->Position.x <= 0.0f)  
-            this->Player->Position.x = 0.0f;
-        else if (this->Player->Position.x + this->Player->Size.x >= this->Width)
-            this->Player->Position.x = this->Width - this->Player->Size.x;
-        if(this->Player->Position.y <= 0.0f)
-            this->Player->Position.y = 0.0f;
-        else if(this->Player->Position.y + this->Player->Size.y >= this->Height)
-            this->Player->Position.y = this->Height - this->Player->Size.y;
+        if(Player->Position.x <= 0.0f)  
+            Player->Position.x = 0.0f;
+        else if (Player->Position.x + Player->Size.x >= screen_width_)
+            Player->Position.x = screen_width_ - Player->Size.x;
+        if(Player->Position.y <= 0.0f)
+            Player->Position.y = 0.0f;
+        else if(Player->Position.y + Player->Size.y >= screen_height_)
+            Player->Position.y = screen_height_ - Player->Size.y;
 
     //Обновляем также поворот пушки т.к. это имеет значение только при движениях мыши
     glm::vec2 up = glm::vec2(0.0f, -1.0f);
  
-    glm::vec2 playerCentre = glm::vec2(this->Player->Position.x + (this->Player->Size.x/2) , this->Player->Position.y + (this->Player->Size.y/2) );
-    glm::vec2 direction = glm::normalize(playerCentre - this->CannonDownPoint);
+    glm::vec2 player_centre = glm::vec2(Player->Position.x + (Player->Size.x/2) , Player->Position.y + (Player->Size.y/2) );
+    glm::vec2 direction = glm::normalize(player_centre - cannon_down_point_);
        
     //atan2(AxBy - BxAy, AxBx + AyBy) упрощение для двумерного случая
     //сокращаем т.к. up.x == 0 : glm::atan(direction.x * up.y - up.x * direction.y, direction.x * up.x+direction.y * up.y);
-    float ungle =  glm::atan(direction.x * up.y,direction.y * up.y);
+    float ungle =  glm::atan(direction.x * up.y, direction.y * up.y);
    
     ungle = -glm::degrees(ungle); //TODO знак нужен для трансформации рендера , продумать еще раз 
     //print("ungle", ungle);
-    this->Cannon->Rotation = ungle;
+    Cannon->Rotation = ungle;
 }
 
 void Game::MouseButtonClick(){
 
-if (this->State == GAME_ACTIVE)
+if (state_ == GameState::kGameActive)
     {
-          if(this->CannonReloadTime > 0) return;
+          if(cannon_reload_time_ > 0) return;
 
-          glm::vec2 playerPos =  glm::vec2(this->Player->Position.x, this->Player->Position.y);
+          glm::vec2 player_pos =  glm::vec2(Player->Position.x, Player->Position.y);
    
-         for(BulletObject& shot : this->Shots){
-            if (!shot.Spawned) {
+         for(auto& cannon_ball : cannon_balls_){
+            if (!cannon_ball.Spawned) {
          
-              shot.Velocity =  glm::normalize(playerPos - shot.StartPosition) * BULLET_STREIGHT;
-              shot.Spawned = true;
-              this->CannonReloadTime = 1.0; // выстрел ставим время 
-             break;      
+              cannon_ball.Velocity =  glm::normalize(player_pos - cannon_ball.StartPosition) * kBulletStreight;
+              cannon_ball.Spawned = true;
+              cannon_reload_time_ = 1.0; // выстрел ставим время 
+              break;      
           } 
        }
    }
@@ -208,44 +210,45 @@ if (this->State == GAME_ACTIVE)
 
 void Game::Render()
 {
-      if(this->State == GAME_ACTIVE|| this->State == GAME_MENU || this->State == GAME_WIN)
+    if(state_ == GameState::kGameActive|| state_ == GameState::kGameMenu || state_ == GameState::kGameWin)
     {
     //Порядок отрисовки не забывай
-    Renderer->DrawSprite(ResourceManager::GetTexture("background"), glm::vec2(0.0f, 0.0f), glm::vec2(this->Width, this->Height));
+    Renderer->DrawSprite(ResourceManager::GetTexture("background"), glm::vec2(0.0f, 0.0f), glm::vec2(screen_width_,screen_height_));
     
     //Логигу отрисовки уровня отдаем самому уровню - вместе с настренным рисовальшиком
-    this->Levels[this->CurrentLevel].Draw(*Renderer);
+    levels_[current_level_].Draw(*Renderer);
     
-    for(BulletObject& shot : this->Shots)
-        if (!shot.Destroyed && shot.Spawned)  
-            shot.Draw(*Renderer);
+    for(auto& cannon_ball : cannon_balls_)
+        if (!cannon_ball.Destroyed && cannon_ball.Spawned)  
+            cannon_ball.Draw(*Renderer);
 
-    this->Stand->Draw(*Renderer); 
-    this->Cannon->DrawOrigin(*Renderer);      
+    Stand->Draw(*Renderer); 
+    Cannon->DrawOrigin(*Renderer);      
 
-     this->Player->Draw(*Renderer);   
+    Player->Draw(*Renderer);   
 
     }
 
-      if (this->State == GAME_MENU)
+      if (state_ == GameState::kGameMenu)
     {
-        Text->RenderText("Press ENTER to start", 380.0f, this->Height / 2, 1.0,   glm::vec3(1.0f, 0.0f, 1.0f));
-        Text->RenderText("Press W or S to select level", 330.0f, this->Height / 2 + 20.0f, 1.0, glm::vec3(1.0f, 0.0f, 1.0f) );
+        Text->RenderText("Press ENTER to start", 380.0f, screen_height_ / 2, 1.0,   glm::vec3(1.0f, 0.0f, 1.0f));
+        Text->RenderText("Press W or S to select level", 330.0f, screen_height_ / 2 + 20.0f, 1.0, glm::vec3(1.0f, 0.0f, 1.0f) );
     }
 
-     if (this->State == GAME_WIN)
+     if (state_ == GameState::kGameWin)
     {
-         Text->RenderText("You WON!!!", 460.0, this->Height / 2 - 20.0, 1.0, glm::vec3(1.0f, 0.0f, 1.0f)  );
-        Text->RenderText("Press ENTER to retry or ESC to quit", 280.0, this->Height / 2, 1.0, glm::vec3(1.0f, 0.0f, 1.0f)  );
+        Text->RenderText("You WON!!!", 460.0, screen_height_ / 2 - 20.0, 1.0, glm::vec3(1.0f, 0.0f, 1.0f)  );
+        Text->RenderText("Press ENTER to retry or ESC to quit", 280.0, screen_height_ / 2, 1.0, glm::vec3(1.0f, 0.0f, 1.0f));
     }     
 }
 
+//TODO зависимость от количества уровней, можно испровить позже
 void Game::ResetLevel()
 {
-    if (this->CurrentLevel == 0)
-        this->Levels[0].Load("resources/levels/one.lvl", this->Width, this->Height);
-    else if (this->CurrentLevel == 1)
-        this->Levels[1].Load("resources/levels/two.lvl", this->Width, this->Height);
+    if (current_level_ == 0)
+        levels_[0].Load("resources/levels/one.lvl", screen_width_, screen_height_);
+    else if (current_level_ == 1)
+        levels_[1].Load("resources/levels/two.lvl", screen_width_, screen_height_);
 }
 
 void Game::ResetPlayer()
@@ -260,58 +263,56 @@ Direction VectorDirection(glm::vec2 target);
 
 void Game::DoCollisions()
 {
-
      //проверка коллизий между целями
-    auto size = this->Levels[this->CurrentLevel].Targets.size();
+    auto size = targets().size();
 
     if(size == 0) return; 
 
     for(int i = 0; i < size-1 ; i++)
     {
-        GameObject& current = this->Levels[this->CurrentLevel].Targets[i];
+        auto& current_aim = targets()[i];
 
         for(int j = i + 1; j < size; j++)
         {
-            GameObject& ball = this->Levels[this->CurrentLevel].Targets[j];
+            auto& next_aim = targets()[j];
+            //Collision collision = CheckCollision(current_aim, next_aim);
+            auto [is_collision, direction, diff_vector] = CheckCollision(current_aim, next_aim);
 
-            Collision collision = CheckCollision(current,ball);
-          
-            if(std::get<0>(collision)){
-                   Direction dir = std::get<1>(collision);
-                   glm::vec2 diff_vector  = std::get<2>(collision);
-
-                    if(dir == LEFT || dir == RIGHT)
+            if(is_collision){
+                   if(direction == LEFT || direction == RIGHT)
                    {
-                        current.Velocity.x = -current.Velocity.x;
+                        current_aim.Velocity.x = -current_aim.Velocity.x;
 
-                        if(current.Velocity.x > 0 && ball.Velocity.x >0 ||current.Velocity.x < 0 && ball.Velocity.x <0)
+                        if(current_aim.Velocity.x > 0 && next_aim.Velocity.x >0 ||current_aim.Velocity.x < 0 && next_aim.Velocity.x <0)
                         { 
-                            ball.Velocity.x = -ball.Velocity.x;
+                            next_aim.Velocity.x = -next_aim.Velocity.x;
                         }
                         
-                        float penetration = (current.Radius + ball.Radius) - std::abs(diff_vector.x);
-                        if(dir == LEFT){
-                            current.Position.x -= penetration;
+                        float penetration = (current_aim.Radius + next_aim.Radius) - std::abs(diff_vector.x);
+
+                        if(direction == LEFT){
+                            current_aim.Position.x -= penetration;
                         }
                         else{
-                            current.Position.x += penetration;
+                            current_aim.Position.x += penetration;
                           
                         }
                    }
                    else
                    {
-                       current.Velocity.y = - current.Velocity.y;
-                       if(current.Velocity.y > 0 && ball.Velocity.y >0 ||current.Velocity.y < 0 && ball.Velocity.y <0)
+                       current_aim.Velocity.y = - current_aim.Velocity.y;
+
+                       if(current_aim.Velocity.y > 0 && next_aim.Velocity.y >0 ||current_aim.Velocity.y < 0 && next_aim.Velocity.y <0)
                         { 
-                            ball.Velocity.y = -ball.Velocity.y;
+                            next_aim.Velocity.y = -next_aim.Velocity.y;
                         }
-                       float penetration = (current.Radius+ball.Radius)  - std::abs(diff_vector.y);
-                       if(dir == UP){
-                            current.Position.y += penetration;
+                       float penetration = (current_aim.Radius+next_aim.Radius)  - std::abs(diff_vector.y);
+                       if(direction == UP){
+                            current_aim.Position.y += penetration;
                            
                        }
                        else{
-                            current.Position.y -= penetration;
+                            current_aim.Position.y -= penetration;
                             
                        }
                    }
@@ -322,22 +323,18 @@ void Game::DoCollisions()
 
     //проверка коллизий с ядром
 
-    for(auto& shot: this->Shots){
-           if(shot.Spawned){
-               for(auto& target: this->Levels[this->CurrentLevel].Targets){
+    for(auto& cannon_ball: cannon_balls_){
+           if(cannon_ball.Spawned){
+               for(auto& target: targets()){
 
-                Collision collision = CheckCollision(shot, target);
+                Collision collision = CheckCollision(cannon_ball, target);
                     if(std::get<0>(collision)){  //TODO Добавить звуки и счетчики
-                        shot.Reset();
+                        cannon_ball.Reset();
                         target.Destroyed = true;
                     }
                }
-
            } 
-
     }
- 
-
 }
 
 
@@ -346,12 +343,10 @@ Collision CheckCollision(GameObject &one, GameObject &two) // AABB - Circle coll
     //получить точку центра шара
     glm::vec2 centerOne(one.Position + one.Radius);
     glm::vec2 centerTwo(two.Position + two.Radius);
-
-    
+   
     // получить вектор разницы между центрами
     glm::vec2 difference = centerOne - centerTwo;
     
-
     if(glm::length(difference) <= (one.Radius + two.Radius))
         return std::make_tuple(true, VectorDirection(difference), difference);
     else

@@ -13,15 +13,12 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 
-// The Width of the screen
-const unsigned int SCREEN_WIDTH = 1024;
-// The height of the screen
-const unsigned int SCREEN_HEIGHT = 768;
 
-float lastX = SCREEN_WIDTH / 2.0f;
-float lastY = SCREEN_HEIGHT / 2.0f;
+const unsigned int kScreenWidth = 1024;
+const unsigned int kScreenHeight = 768;
 
-Game ShootingRange(SCREEN_WIDTH, SCREEN_HEIGHT);
+
+Game shooting_range(kScreenWidth, kScreenHeight);
 
 int main()
 {
@@ -35,7 +32,7 @@ int main()
 #endif
     glfwWindowHint(GLFW_RESIZABLE, false);
 
-    GLFWwindow* window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "ShootingRange", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(kScreenWidth, kScreenHeight, "Shooting Range", nullptr, nullptr);
     glfwMakeContextCurrent(window);
 
     // glad: load all OpenGL function pointers
@@ -50,19 +47,19 @@ int main()
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
     glfwSetCursorPosCallback(window, mouse_callback);
-	glfwSetCursorPos(window, lastX, lastY);
+	glfwSetCursorPos(window, kScreenWidth / 2.0f, kScreenHeight / 2.0f);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
 
 
     // OpenGL configuration
     // --------------------
-    glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+    glViewport(0, 0, kScreenWidth, kScreenHeight);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   //Инициализация игры и состояния
-    ShootingRange.Init();
-    ShootingRange.State = GAME_MENU;
+    shooting_range.Init();
+    shooting_range.set_state(GameState::kGameMenu);
     
     // deltaTime variables
     // -------------------
@@ -77,13 +74,13 @@ int main()
         lastFrame = currentFrame;
         glfwPollEvents();
 
-        ShootingRange.ProcessInput(deltaTime);
-        ShootingRange.Update(deltaTime);
+        shooting_range.ProcessInput(deltaTime);
+        shooting_range.Update(deltaTime);
 
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
      
-        ShootingRange.Render();
+        shooting_range.Render();
 
         glfwSwapBuffers(window);
     }
@@ -103,10 +100,10 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     if (key >= 0 && key < 1024)
     {
         if (action == GLFW_PRESS)
-            ShootingRange.Keys[key] = true;
+            shooting_range.set_keys(key, true);
         else if (action == GLFW_RELEASE){
-            ShootingRange.Keys[key] = false;
-            ShootingRange.KeysProcessed[key] = false;
+             shooting_range.set_keys(key, false);
+            shooting_range.set_keys_processed(key,false);
         }
     }
 }
@@ -119,12 +116,12 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 
 	//print("xpos ",xpos,"ypos", ypos);
-    ShootingRange.MouseInput(xpos, ypos);
+    shooting_range.MouseInput(xpos, ypos);
 }
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods){
 
     if(button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
-        ShootingRange.MouseButtonClick();
+        shooting_range.MouseButtonClick();
     
 }
