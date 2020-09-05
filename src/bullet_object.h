@@ -11,7 +11,7 @@
 #include "sprite_renderer.h"
 #include "resource_manager.h"
 
-#include "utility.hpp"
+#include "utility.h"
 
 
 

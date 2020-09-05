@@ -1,4 +1,4 @@
-﻿#include "bullet_object.hpp"
+﻿#include "bullet_object.h"
 
 
   BulletObject::BulletObject(): GameObject(), StartPosition(0.0f){}

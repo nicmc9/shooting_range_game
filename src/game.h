@@ -6,8 +6,8 @@
 #include "sprite_renderer.h"
 #include "game_level.h"
 #include "game_object.h"
-#include "bullet_object.hpp"
-#include "text_renderer.hpp"
+#include "bullet_object.h"
+#include "text_renderer.h"
 
 //основные игровые состояния
 enum GameState {

@@ -2,9 +2,9 @@
 
 #include <algorithm>
 
-#include "game.hpp"
+#include "game.h"
 
-#include "utility.hpp"
+#include "utility.h"
 
 enum Direction {
 	UP,
@@ -142,10 +142,9 @@ if (this->State == GAME_MENU)
             this->CurrentLevel = 1;
             this->KeysProcessed[GLFW_KEY_S] = true;
         }
- }  
+}  
 
-
- if (this->State == GAME_WIN)
+if (this->State == GAME_WIN)
     {
         if (this->Keys[GLFW_KEY_ENTER])
         {
@@ -156,8 +155,8 @@ if (this->State == GAME_MENU)
 
 }
 
- void Game::MouseInput(double xpos, double ypos)
- {
+void Game::MouseInput(double xpos, double ypos)
+{
     glm::vec2 playerPos = glm::vec2(this->Width / 2.0f - PLAYER_SIZE.x / 2.0f,  this->Height/2 - PLAYER_SIZE.y);
     this->Player->Position.x = xpos - this->Player->Size.x/2;
     this->Player->Position.y = ypos - this->Player->Size.y/2;

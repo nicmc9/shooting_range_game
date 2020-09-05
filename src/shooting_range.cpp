@@ -5,7 +5,7 @@
 #include <iostream>
 
 #include "resource_manager.h"
-#include "game.hpp"
+#include "game.h"
 
 // GLFW function declerations
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);

@@ -12,7 +12,7 @@
 #include "sprite_renderer.h"
 #include "resource_manager.h"
 
-#include "utility.hpp"
+#include "utility.h"
 /*
   Контейнер для игровых объектов а именно кирпичей,
   сам загружает информацию с диска и инициализирем игровые объекты
