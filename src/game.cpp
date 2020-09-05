@@ -60,8 +60,10 @@ void Game::Init()
     Stand = new GameObject(standPos, STAND_SIZE, ResourceManager::GetTexture("stand"));
 
     glm::vec2 cannonPos = glm::vec2( this->Width / 2.0f - CANNON_SIZE.x / 2.0f,  this->Height - CANNON_SIZE.y - STAND_SIZE.y/2);
-    
     this->Cannon = new GameObject(cannonPos, CANNON_SIZE, ResourceManager::GetTexture("cannon"));
+
+
+    this->CentreRot = glm::vec2( this->Width / 2.0f,  cannonPos.y + CANNON_SIZE.y);
 
 
     glm::vec2 playerPos = glm::vec2( this->Width / 2.0f - PLAYER_SIZE.x / 2.0f,  this->Height/2 - PLAYER_SIZE.y);
@@ -90,8 +92,8 @@ void Game::ProcessInput(float dt)
  void Game::MouseInput(double xpos, double ypos)
  {
     glm::vec2 playerPos = glm::vec2(this->Width / 2.0f - PLAYER_SIZE.x / 2.0f,  this->Height/2 - PLAYER_SIZE.y);
-    this->Player->Position.x = xpos - this->Player->Size.x;
-    this->Player->Position.y = ypos - this->Player->Size.y;
+    this->Player->Position.x = xpos - this->Player->Size.x/2;
+    this->Player->Position.y = ypos - this->Player->Size.y/2;
 
     //ПРоверка достижения границ экрана
         if(this->Player->Position.x <= 0.0f)  
@@ -106,11 +108,10 @@ void Game::ProcessInput(float dt)
 
     //Обновляем также поворот пушки т.к. это имеет значение только при движениях мыши
     glm::vec2 up = glm::vec2(0.0f, -1.0f);
-
-    glm::vec2 centre = glm::vec2(this->Width/2, this->Height);
+ 
 
     glm::vec2 playerCentre = glm::vec2(this->Player->Position.x + (this->Player->Size.x/2) , this->Player->Position.y + (this->Player->Size.y/2) );
-    glm::vec2 direction = glm::normalize(playerCentre - centre);
+    glm::vec2 direction = glm::normalize(playerCentre - this->CentreRot);
 
        
     //atan2(AxBy - BxAy, AxBx + AyBy) упрощение для двумерного случая

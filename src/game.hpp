@@ -31,6 +31,8 @@ public:
     unsigned int           CurrentLevel;
     //Заряды должны быть частью уровня, как и количество мишеней например и другие настройки
     unsigned int Сharges;
+
+    glm::vec2 CentreRot;
     //!Определить время игры
   
     SpriteRenderer* Renderer = nullptr;
