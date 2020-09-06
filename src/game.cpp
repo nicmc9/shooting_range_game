@@ -41,7 +41,8 @@ void Game::Init()
 
     //Загружаем все текстуры
     ResourceManager::LoadTexture("resources/textures/background.png", false, "background");
-    ResourceManager::LoadTexture("resources/textures/Target.png", true, "target");
+    ResourceManager::LoadTexture("resources/textures/TargetP.png", true, "targetp");
+    ResourceManager::LoadTexture("resources/textures/TargetG.png", true, "targetg");
     ResourceManager::LoadTexture("resources/textures/Aim.png", true, "aim");
     ResourceManager::LoadTexture("resources/textures/Stand.png", true, "stand");
     ResourceManager::LoadTexture("resources/textures/Cannon.png", true, "cannon");
@@ -259,6 +260,7 @@ void Game::Render()
     Text->RenderText(timer_, 55.0f, 20.0f, 1.0f, glm::vec3(1.0f, 0.0f, 1.0f));
 
     Text->RenderText(std::to_string(downs_targets_), (screen_width_ - 50), 20.0f, 1.0f, glm::vec3(1.0f, 0.0f, 1.0f));
+
     }
 
       if (state_ == GameState::kGameMenu)
@@ -365,10 +367,14 @@ void Game::DoCollisions()
                for(auto& target: targets()){
 
                 Collision collision = CheckCollision(cannon_ball, target);
-                    if(std::get<0>(collision)){  //TODO Добавить звуки и счетчики
-                        downs_targets_ += 1;
+                    if(std::get<0>(collision)){  //TODO Добавить звуки
                         cannon_ball.Reset();
-                        target.destroyed_ = true;
+                        target.health_ -= 1.0f;
+
+                        if(target.health_ <= 0){
+                            downs_targets_ += 1;
+                            target.destroyed_ = true;
+                        }
                     }
                }
            } 
