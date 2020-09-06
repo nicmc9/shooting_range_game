@@ -22,7 +22,8 @@ class GameLevel
 {
 public:
        
-    std::vector<GameObject> targets_; 
+    std::vector<GameObject> targets_;
+    double level_time_     =     0.0; 
   
     GameLevel() { }
     //Загрузка уровня из файла

@@ -64,32 +64,35 @@ bool GameLevel::IsCompleted()
 
 void GameLevel::Init(std::vector<std::vector<unsigned int>> target_data, unsigned int window_width, unsigned int window_height)
 {
-    
+    //TODO ОБязательно сделать проверку ошибок
     // Вычисляем размерность кирпичей в зависимости от размера экрана и их количества
     size_t num_rows = target_data.size();
     size_t num_targets = target_data[0].size(); //! Здесь учитываеться что все строки в файле одинаковой длинны
     // мы можем индексировать вектор в [0], так как эта функция вызывается только если высота > 0
   
-    //генератор случайных чисел новый
+    if(!target_data[1][0]) print("Error load time level");
+    level_time_ =  target_data[1][0];
+   
+   //Инициализация целей
+
+   //генератор случайных чисел новый
     std::mt19937 gen; 
     gen.seed(time(0));
-    
-    std::uniform_int_distribution<> velocityX(150, 300); 
-    std::uniform_int_distribution<> velocityY(70, 150); 
-
     float unit_width = window_width / static_cast<float>(num_targets);
  
-        for (auto x : target_data[0] ) //width == 5
+        for (int i = 0; i <  target_data[0].size(); i++ ) //width == 5
         {
                 // проверяем тип блока и назначаем свойства
-            if (x == 1) // твердый
+            if (target_data[0][i] == 1) // твердый
             {
+                std::uniform_int_distribution<> range_vel_x(150, 300); 
+                std::uniform_int_distribution<> range_vel_y(70, 150); 
                 float radius = 15.0f; 
                 auto posy =  0 + radius;
-                glm::vec2 pos(unit_width * x, posy);
+                glm::vec2 pos(unit_width * i, posy);
                 glm::vec2 size(radius * 2.0f, radius * 2.0f);
-                int velx = velocityX(gen);
-                int vely = velocityY(gen);
+                int velx = range_vel_x(gen);
+                int vely = range_vel_y(gen);
                 if(velx % 2 == 0 ) velx = -velx;
                 glm::vec2 velocity(velx,vely);
 
@@ -98,19 +101,17 @@ void GameLevel::Init(std::vector<std::vector<unsigned int>> target_data, unsigne
                 targets_.push_back(obj);
                 
             }
-            else if (x == 2)	
+            else if (target_data[0][i] == 2)	
             {
               
                 float radius = 25.0f; 
-                auto posy =  0 + radius;
-                glm::vec2 pos(unit_width * x, posy);
+                std::uniform_int_distribution<> range_pos_y(50, 350); 
+                float posy =  range_pos_y(gen);
+                glm::vec2 pos(unit_width * i, posy);
                 glm::vec2 size(radius * 2.0f, radius * 2.0f);
-                int velx = velocityX(gen);
-                int vely = velocityY(gen);
-                if(velx % 2 == 0 ) velx = -velx;
-                glm::vec2 velocity(velx,vely);
+                glm::vec2 velocity(100.0f, 0.0f);
 
-                GameObject obj(pos, size, ResourceManager::GetTexture("targetp"), radius, glm::vec3(1.0f), velocity, 1.0f );
+                GameObject obj(pos, size, ResourceManager::GetTexture("targetp"), radius, glm::vec3(1.0f), velocity, 4.0f );
                 
                 targets_.push_back(obj);
             }

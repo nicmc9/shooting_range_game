@@ -162,7 +162,7 @@ if (state_ == GameState::kGameMenu)
         {
             state_ = GameState::kGameActive;
             keys_processed_[GLFW_KEY_ENTER] = true;
-            StartLevelTime( 100 );  //!здесь нужно получить переменную из уровня
+            StartLevelTime( levels_[current_level_].level_time_ );  //!здесь нужно получить переменную из уровня
         }
     if (keys_[GLFW_KEY_W] && !keys_processed_[GLFW_KEY_W])
         {
