@@ -4,14 +4,7 @@
 #include "game.h"
 #include "utility.h"
 
-enum Direction {
-	UP,
-	RIGHT,
-	DOWN,
-	LEFT
-}; 
 
-using Collision = std::tuple<bool, Direction, glm::vec2>; 
 
 Game::Game(unsigned int width, unsigned int height)
     : state_(GameState::kGameActive), keys_(), screen_width_(width), screen_height_(height)
@@ -96,7 +89,7 @@ void Game::Update(float dt )
     levels_[current_level_].Update(dt, screen_width_, screen_height_);
 
    for(auto& cannon_ball : cannon_balls_)
-        if (!cannon_ball.Destroyed && cannon_ball.Spawned)  
+        if (!cannon_ball.destroyed_ && cannon_ball.activated_)  
             cannon_ball.Move(dt, screen_width_, screen_height_);
 
     //Обновляем возможность выстрела
@@ -107,8 +100,8 @@ void Game::Update(float dt )
    // проверка всех коллизий уже друг с другом
    // Удаляем все уничтоженные цели 
 
-    auto destroed = [](const auto& target) { return target.Destroyed; };
-    targets().erase(std::remove_if(targets().begin(), targets().end(), destroed), targets().end());
+    auto destroyed = [](const auto& target) { return target.destroyed_; };
+    targets().erase(std::remove_if(targets().begin(), targets().end(), destroyed), targets().end());
 
     if (state_ == GameState::kGameActive && targets().size()==0)
     {
@@ -158,25 +151,13 @@ if (state_ == GameState::kGameWin)
 
 void Game::MouseInput(double xpos, double ypos)
 {
-    //glm::vec2 playerPos = glm::vec2(screen_width_ / 2.0f - kPlayerSize.x / 2.0f, screen_height_/2 - kPlayerSize.y);
-
-    Player->Position.x = xpos - Player->Size.x/2;
-    Player->Position.y = ypos - Player->Size.y/2;
-
-    //ПРоверка достижения границ экрана
-        if(Player->Position.x <= 0.0f)  
-            Player->Position.x = 0.0f;
-        else if (Player->Position.x + Player->Size.x >= screen_width_)
-            Player->Position.x = screen_width_ - Player->Size.x;
-        if(Player->Position.y <= 0.0f)
-            Player->Position.y = 0.0f;
-        else if(Player->Position.y + Player->Size.y >= screen_height_)
-            Player->Position.y = screen_height_ - Player->Size.y;
+    glm::vec2 new_pos = glm::vec2(xpos - Player->size_.x/2,ypos - Player->size_.y/2 );
+    Player->set_position_bound(new_pos, screen_width_, screen_height_ );
 
     //Обновляем также поворот пушки т.к. это имеет значение только при движениях мыши
     glm::vec2 up = glm::vec2(0.0f, -1.0f);
  
-    glm::vec2 player_centre = glm::vec2(Player->Position.x + (Player->Size.x/2) , Player->Position.y + (Player->Size.y/2) );
+    glm::vec2 player_centre = glm::vec2(Player->position_.x + (Player->size_.x/2) , Player->position_.y + (Player->size_.y/2) );
     glm::vec2 direction = glm::normalize(player_centre - cannon_down_point_);
        
     //atan2(AxBy - BxAy, AxBx + AyBy) упрощение для двумерного случая
@@ -185,22 +166,20 @@ void Game::MouseInput(double xpos, double ypos)
    
     ungle = -glm::degrees(ungle); //TODO знак нужен для трансформации рендера , продумать еще раз 
     //print("ungle", ungle);
-    Cannon->Rotation = ungle;
+    Cannon->rotation_ = ungle;
 }
 
 void Game::MouseButtonClick(){
 
 if (state_ == GameState::kGameActive)
     {
-          if(cannon_reload_time_ > 0) return;
-
-          glm::vec2 player_pos =  glm::vec2(Player->Position.x, Player->Position.y);
+        if(cannon_reload_time_ > 0) return;
    
-         for(auto& cannon_ball : cannon_balls_){
-            if (!cannon_ball.Spawned) {
-         
-              cannon_ball.Velocity =  glm::normalize(player_pos - cannon_ball.StartPosition) * kBulletStreight;
-              cannon_ball.Spawned = true;
+        for(auto& cannon_ball : cannon_balls_){
+            if (!cannon_ball.activated_) {
+                    
+              cannon_ball.velocity_ = glm::normalize(Player->position_ - cannon_ball.start_position_ )* kBulletStreight;
+              cannon_ball.activated_ = true;
               cannon_reload_time_ = 1.0; // выстрел ставим время 
               break;      
           } 
@@ -219,7 +198,7 @@ void Game::Render()
     levels_[current_level_].Draw(*Renderer);
     
     for(auto& cannon_ball : cannon_balls_)
-        if (!cannon_ball.Destroyed && cannon_ball.Spawned)  
+        if (!cannon_ball.destroyed_ && cannon_ball.activated_)  
             cannon_ball.Draw(*Renderer);
 
     Stand->Draw(*Renderer); 
@@ -256,9 +235,9 @@ void Game::ResetPlayer()
 
 }
 //Определение столкновений
-
-Collision CheckCollision(GameObject &one, GameObject &two);
-Direction VectorDirection(glm::vec2 target);
+//TODO сделать статическими
+Game::Collision CheckCollision(GameObject &one, GameObject &two);
+Game::Direction VectorDirection(glm::vec2 target);
 
 
 void Game::DoCollisions()
@@ -279,42 +258,38 @@ void Game::DoCollisions()
             auto [is_collision, direction, diff_vector] = CheckCollision(current_aim, next_aim);
 
             if(is_collision){
-                   if(direction == LEFT || direction == RIGHT)
+                   if(direction == Direction::kLeft || direction == Direction::kRight)
                    {
-                        current_aim.Velocity.x = -current_aim.Velocity.x;
-
-                        if(current_aim.Velocity.x > 0 && next_aim.Velocity.x >0 ||current_aim.Velocity.x < 0 && next_aim.Velocity.x <0)
+                        current_aim.velocity_.x =  -current_aim.velocity_.x;
+            
+                        if(current_aim.velocity_.x  > 0 && next_aim.velocity_.x  >0 ||current_aim.velocity_.x  < 0 && next_aim.velocity_.x  <0)
                         { 
-                            next_aim.Velocity.x = -next_aim.Velocity.x;
+                            next_aim.velocity_.x  = -next_aim.velocity_.x;
                         }
                         
-                        float penetration = (current_aim.Radius + next_aim.Radius) - std::abs(diff_vector.x);
+                        float penetration = (current_aim.radius_ + next_aim.radius_) - std::abs(diff_vector.x);
 
-                        if(direction == LEFT){
-                            current_aim.Position.x -= penetration;
-                        }
-                        else{
-                            current_aim.Position.x += penetration;
-                          
-                        }
-                   }
+                        if(direction == Direction::kLeft)
+                           current_aim.position_.x -= penetration;
+                        else
+                           current_aim.position_.x += penetration;
+                    }
                    else
                    {
-                       current_aim.Velocity.y = - current_aim.Velocity.y;
-
-                       if(current_aim.Velocity.y > 0 && next_aim.Velocity.y >0 ||current_aim.Velocity.y < 0 && next_aim.Velocity.y <0)
+                       current_aim.velocity_.y = -current_aim.velocity_.y;
+                   
+                       if(current_aim.velocity_.y > 0 && next_aim.velocity_.y >0 ||current_aim.velocity_.y < 0 && next_aim.velocity_.y <0)
                         { 
-                            next_aim.Velocity.y = -next_aim.Velocity.y;
+                            next_aim.velocity_.y = -next_aim.velocity_.y;
                         }
-                       float penetration = (current_aim.Radius+next_aim.Radius)  - std::abs(diff_vector.y);
-                       if(direction == UP){
-                            current_aim.Position.y += penetration;
-                           
-                       }
-                       else{
-                            current_aim.Position.y -= penetration;
-                            
-                       }
+                       
+                       float penetration = (current_aim.radius_+next_aim.radius_)  - std::abs(diff_vector.y);
+
+                       if(direction == Direction::kUp)
+                          current_aim.position_.y += penetration;
+                       else
+                          current_aim.position_.y -= penetration;
+                       
                    }
             }
 
@@ -324,13 +299,13 @@ void Game::DoCollisions()
     //проверка коллизий с ядром
 
     for(auto& cannon_ball: cannon_balls_){
-           if(cannon_ball.Spawned){
+           if(cannon_ball.activated_){
                for(auto& target: targets()){
 
                 Collision collision = CheckCollision(cannon_ball, target);
                     if(std::get<0>(collision)){  //TODO Добавить звуки и счетчики
                         cannon_ball.Reset();
-                        target.Destroyed = true;
+                        target.destroyed_ = true;
                     }
                }
            } 
@@ -338,22 +313,22 @@ void Game::DoCollisions()
 }
 
 
-Collision CheckCollision(GameObject &one, GameObject &two) // AABB - Circle collision
+Game::Collision CheckCollision(GameObject &one, GameObject &two) // AABB - Circle collision
 {
     //получить точку центра шара
-    glm::vec2 centerOne(one.Position + one.Radius);
-    glm::vec2 centerTwo(two.Position + two.Radius);
+    glm::vec2 centerOne(one.position_ + one.radius_);
+    glm::vec2 centerTwo(two.position_ + two.radius_);
    
     // получить вектор разницы между центрами
     glm::vec2 difference = centerOne - centerTwo;
     
-    if(glm::length(difference) <= (one.Radius + two.Radius))
+    if(glm::length(difference) <= (one.radius_ + two.radius_))
         return std::make_tuple(true, VectorDirection(difference), difference);
     else
-        return std::make_tuple(false, UP, glm::vec2(0.0f, 0.0f));
+        return std::make_tuple(false, Game::Direction::kUp, glm::vec2(0.0f, 0.0f));
 }   
 
-Direction VectorDirection(glm::vec2 target)
+Game::Direction VectorDirection(glm::vec2 target)
 {
     //TODO еще раз проверить векторы
     glm::vec2 compass[] = {
@@ -373,6 +348,6 @@ Direction VectorDirection(glm::vec2 target)
             best_match = i;
         }
     }
-    return (Direction)best_match;
+    return (Game::Direction)best_match;
 }    
 

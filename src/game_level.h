@@ -21,11 +21,9 @@
 class GameLevel
 {
 public:
-    
-    
+       
     std::vector<GameObject> Targets; 
-    
-
+  
     GameLevel() { }
     //Загрузка уровня из файла
     //размеры области отрисовки кирпичей  levelWidth == screen_widht levelHeight== screenHeight/2

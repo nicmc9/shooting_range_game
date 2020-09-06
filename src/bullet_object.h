@@ -1,8 +1,5 @@
 ﻿#pragma once
 
-#include <vector>
-
-
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 
@@ -18,14 +15,17 @@
 class BulletObject : public GameObject
 {
 public:
-    glm::vec2 StartPosition;
-      
-    BulletObject();
-    BulletObject(glm::vec2 pos,  Texture2D sprite, glm::vec2 start_pos, float radius = 15.0f);
-    ~BulletObject() = default;
+   BulletObject();
+   BulletObject(glm::vec2 pos,  Texture2D sprite, glm::vec2 start_pos, float radius = 15.0f);
+   virtual ~BulletObject() = default;
 
-   glm::vec2 Move(float dt, unsigned int window_width,unsigned int window_height) override;
-   void      Reset();
+   virtual void Move(float dt, unsigned int window_width,unsigned int window_height) override;
+   void         Reset();
+
+ 
+
+public:
+   glm::vec2 start_position_;
 };
 
 

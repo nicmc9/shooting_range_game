@@ -1,38 +1,34 @@
 ﻿#include "bullet_object.h"
 
+BulletObject::BulletObject(): GameObject(), start_position_(0.0f) { }
 
-  BulletObject::BulletObject(): GameObject(), StartPosition(0.0f){}
+BulletObject::BulletObject(glm::vec2 pos,  Texture2D sprite, glm::vec2 start_pos, float radius)
+  : GameObject(pos, glm::vec2(radius * 2.0f, radius * 2.0f), sprite, radius), start_position_(start_pos)
+{ 
+  activated_ = false;
+}
 
-  BulletObject::BulletObject(glm::vec2 pos,  Texture2D sprite, glm::vec2 start_pos, float radius)
-  : GameObject(pos, glm::vec2(radius * 2.0f, radius * 2.0f), sprite, radius), StartPosition(start_pos)
-  { 
-    this->Spawned = false;
+void BulletObject::Move(float dt, unsigned int window_width,unsigned int window_height)
+{
+  //Двигаем ядро
+  position_ += velocity_*dt;  //Скорость содержит и направление ее обновляем в коллизиях
+  //ПРоверка достижения границ экрана
+
+  if(position_.x + size_.x <= 0.0f ||position_.x >= window_width)
+  {
+    Reset();
   }
-
-    glm::vec2 BulletObject::Move(float dt, unsigned int window_width,unsigned int window_height){
-
-      //Двигаем ядро
-        this->Position += this->Velocity*dt;  //Скорость содержит и направление ее обновляем в коллизиях
-
-        //ПРоверка достижения границ экрана
-        if(this->Position.x + this->Size.x <= 0.0f ||this->Position.x >= window_width)
-        {
-            this->Reset();
-        }
    
-        if(this->Position.y + this->Size.y <= 0.0f || this->Position.y >= window_height)
-        {
-           this->Reset();
-        }
+  if(position_.y + size_.y <= 0.0f || position_.y >= window_height)
+  {
+    Reset();
+  }
         
-    
-      return this->Position;  // TODO проверить этот возврат 
+}
 
-    }
-
-    void  BulletObject::Reset(){
-
-            this->Spawned = false;
-            this->Position = this->StartPosition;
-            this->Velocity = glm::vec2(0.0f);
-     }
+void  BulletObject::Reset()
+{
+  activated_ = false;
+  position_ = start_position_;
+  velocity_ = glm::vec2(0.0f);
+}

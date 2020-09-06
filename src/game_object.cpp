@@ -2,46 +2,65 @@
 
 
 GameObject::GameObject() 
-    : Position(0.0f, 0.0f), Size(1.0f, 1.0f), Velocity(0.0f), Color(1.0f), Rotation(0.0f), Radius(0.0f), Sprite(), Destroyed(false), Spawned(true) { }
+    : position_(0.0f, 0.0f), size_(1.0f, 1.0f), velocity_(0.0f),
+      color_(1.0f), rotation_(0.0f), radius_(0.0f), sprite_(),
+      health_(1.0f), destroyed_(false), activated_(true) { }
 
-GameObject::GameObject(glm::vec2 pos, glm::vec2 size, Texture2D sprite, float radius, glm::vec3 color, glm::vec2 velocity) 
-    : Position(pos), Size(size), Velocity(velocity), Color(color), Rotation(0.0f), Sprite(sprite),Radius(radius), Destroyed(false), Spawned(true) { }
+GameObject::GameObject(glm::vec2 pos, glm::vec2 size, Texture2D sprite,
+      float radius, glm::vec3 color, glm::vec2 velocity, float health) 
+    : position_(pos), size_(size), velocity_(velocity), color_(color),
+      rotation_(0.0f), sprite_(sprite),radius_(radius), health_(health),
+      destroyed_(false), activated_(true) { }
 
 void GameObject::Draw(SpriteRenderer &renderer)
 {
-    renderer.DrawSprite(this->Sprite, this->Position, this->Size, this->Rotation, this->Color);
+    renderer.DrawSprite(sprite_, position_, size_, rotation_, color_);
 }
 
 void GameObject::DrawOrigin(SpriteRenderer &renderer)
 {
-    renderer.DrawSpriteOrigin(this->Sprite, this->Position, this->Size, this->Rotation, this->Color);
+    renderer.DrawSpriteOrigin(sprite_, position_, size_, rotation_, color_);
 }
 
-glm::vec2 GameObject::Move(float dt, unsigned int window_width, unsigned int window_height)
+void GameObject::Move(float dt, unsigned int window_width, unsigned int window_height)
 {
         //Двигаем шар
-        this->Position += this->Velocity*dt;  //Скорость содержит и направление ее обновляем в коллизиях
+        position_ += velocity_*dt;  //Скорость содержит и направление ее обновляем в коллизиях
         //ПРоверка достижения границ экрана
-        if(this->Position.x <= 0.0f)
+        if(position_.x <= 0.0f)
         {
-            this->Velocity.x = - this->Velocity.x; // меняем направление скорости
-            this->Position.x = 0.0f;
+            velocity_.x = - velocity_.x; // меняем направление скорости
+            position_.x = 0.0f;
         }
-        else if (this->Position.x + this->Size.x >= window_width)
+        else if (position_.x + size_.x >= window_width)
         {
-            this->Velocity.x = -this->Velocity.x;
-            this->Position.x = window_width - this->Size.x;
+            velocity_.x = -velocity_.x;
+            position_.x = window_width - size_.x;
         }
-        if(this->Position.y <= 0.0f)
+        if(position_.y <= 0.0f)
         {
-            this->Velocity.y = - this->Velocity.y;
-            this->Position.y = 0.0f;
+            velocity_.y = - velocity_.y;
+            position_.y = 0.0f;
         }
-        else if(this->Position.y + this->Size.y >= window_height-this->Size.y){
-            this->Velocity.y = - this->Velocity.y;
-            this->Position.y = window_height - this->Size.y*2;
+        else if(position_.y + size_.y >= window_height-size_.y){
+            velocity_.y = - velocity_.y;
+            position_.y = window_height - size_.y*2;
         }
-        //от нижней границы не отталкиваемся это потеря жизни
-    
-    return this->Position;  // TODO проверить этот возврат 
+   
+  
+}
+
+void    GameObject::set_position_bound(glm::vec2 pos, unsigned int width, unsigned int height ){
+
+        position_  = pos; 
+
+    //ПРоверка достижения границ экрана
+        if(position_.x <= 0.0f)  
+            position_.x = 0.0f;
+        else if (position_.x + size_.x >= width)
+            position_.x =  width - size_.x;
+        if( position_.y <= 0.0f)
+            position_.y = 0.0f;
+        else if(position_.y + size_.y >= height)
+            position_.y = height - size_.y;
 }

@@ -42,14 +42,14 @@ void GameLevel::Load(const char *file, unsigned int levelWidth, unsigned int lev
 void GameLevel::Draw(SpriteRenderer &renderer)
 {
     for (GameObject &target : this->Targets)
-        if (!target.Destroyed && target.Spawned)  
+        if (!target.destroyed_ && target.activated_)  
             target.Draw(renderer);
 }
 void GameLevel::Update(float dt, unsigned int window_width, unsigned int window_height )
 {
    
     for(GameObject& target : this->Targets)
-        if (!target.Destroyed && target.Spawned)  
+        if (!target.destroyed_ && target.activated_)   
             target.Move(dt, window_width, window_height);
 }
 
@@ -57,7 +57,7 @@ void GameLevel::Update(float dt, unsigned int window_width, unsigned int window_
 bool GameLevel::IsCompleted()
 {
     for (GameObject &target : this->Targets)
-        if (!target.Destroyed)
+        if (!target.destroyed_)
             return false;
     return true;
 }

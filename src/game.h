@@ -17,6 +17,8 @@ enum class GameState {
     kGameOver
 };
 
+
+
 const glm::vec2 kPlayerSize(50.0f, 50.0f);
 const glm::vec2 kStandSize(150.0f, 50.0f);
 const glm::vec2 kCannonSize(50.0f, 70.0f);
@@ -29,6 +31,9 @@ public:
     Game(unsigned int width, unsigned int height);
     ~Game();
 
+    enum class Direction { kUp, kRight, kDown, kLeft }; 
+    using Collision = std::tuple<bool, Direction, glm::vec2>; 
+    
     auto& targets();
     void set_state(GameState state);
     void set_keys(int key, bool state);
