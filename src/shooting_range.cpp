@@ -70,10 +70,11 @@ int main()
     while (!glfwWindowShouldClose(window))
     {
         float currentFrame = glfwGetTime();
+        
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
         glfwPollEvents();
-
+        
         shooting_range.ProcessInput(deltaTime);
         shooting_range.Update(deltaTime);
 
@@ -102,7 +103,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         if (action == GLFW_PRESS)
             shooting_range.set_keys(key, true);
         else if (action == GLFW_RELEASE){
-             shooting_range.set_keys(key, false);
+            shooting_range.set_keys(key, false);
             shooting_range.set_keys_processed(key,false);
         }
     }

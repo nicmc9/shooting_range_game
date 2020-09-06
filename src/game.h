@@ -3,6 +3,9 @@
 
 
 #include <vector>
+#include <string>
+#include <chrono>
+
 #include "sprite_renderer.h"
 #include "game_level.h"
 #include "game_object.h"
@@ -41,13 +44,21 @@ public:
 
     //!Определить время игры
   
-    SpriteRenderer* Renderer = nullptr;
-    GameObject*     Player = nullptr;
-    GameObject*     Stand = nullptr;
-    GameObject*     Cannon = nullptr;
-    TextRenderer*   Text = nullptr;
+    SpriteRenderer* Renderer =  nullptr;
+    GameObject*     Player =    nullptr;
+    GameObject*     Stand =     nullptr;
+    GameObject*     Cannon =    nullptr;
+    GameObject*     Clock =     nullptr;
+    TextRenderer*   Text =      nullptr;
 
+    //Это строка для вывода и данные для времени
+    std::string timer_;
+    double start_time_;
+    double duration_;
    
+    //счетчик подбитых
+    int downs_targets_;
+
      //Загружаем все шейдеры текстуры и создаем игровые объекты
     void Init();
     void ProcessInput(float dt);
@@ -58,6 +69,8 @@ public:
 
 private:
     
+    void StartLevelTime(double duration);
+    bool IsGameOver();
     // сброс параметров 
     void ResetLevel();
     void ResetPlayer();

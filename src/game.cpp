@@ -9,6 +9,7 @@
 Game::Game(unsigned int width, unsigned int height)
     : state_(GameState::kGameActive), keys_(), screen_width_(width), screen_height_(height)
 {
+    
 }
 
 Game::~Game()
@@ -45,6 +46,7 @@ void Game::Init()
     ResourceManager::LoadTexture("resources/textures/Stand.png", true, "stand");
     ResourceManager::LoadTexture("resources/textures/Cannon.png", true, "cannon");
     ResourceManager::LoadTexture("resources/textures/Cannonball.png", true, "cannonball");
+    ResourceManager::LoadTexture("resources/textures/Clock.png", true, "clock");
 
     Text = new TextRenderer(screen_width_, screen_height_);
     Text->Load("resources/fonts/OCRAEXT.TTF", 24);
@@ -79,7 +81,14 @@ void Game::Init()
         cannon_balls_.emplace_back(BulletObject(bullet_pos,  ResourceManager::GetTexture("cannonball"), bullet_pos, kBulletSize.x/2));
     }
 
+    //Данные времен и объект часов    
+    start_time_ = 0.0;
+    duration_ =  0.0;
 
+    Clock = new GameObject(glm::vec2(20.0f,10.0f), glm::vec2(40.0f,40.0f), ResourceManager::GetTexture("clock"));
+   
+   // счетчик сбитых мишеней
+    downs_targets_  = 0;
 
 }
 
@@ -111,7 +120,37 @@ void Game::Update(float dt )
     }
  
    DoCollisions();
+
+
+    if (state_ == GameState::kGameActive)
+    {
+        if(IsGameOver()) {
+        
+             ResetLevel();
+             ResetPlayer();
+             state_ = GameState::kGameOver;
+        }
+    }
 }
+
+ void Game::StartLevelTime(double duration){
+     start_time_ = glfwGetTime();
+     duration_ = duration;
+     timer_ = std::to_string(static_cast<int>(duration_));
+ }
+
+ bool Game::IsGameOver(){
+     
+     double current_time = glfwGetTime();
+     double elapsed_time = current_time - start_time_;
+     double diff = duration_ - elapsed_time;   
+     timer_ = std::to_string(static_cast<int>(diff));
+
+     if(elapsed_time > duration_) return true;
+
+     return false;
+ }
+
 
 void Game::ProcessInput(float dt)
 {
@@ -122,6 +161,7 @@ if (state_ == GameState::kGameMenu)
         {
             state_ = GameState::kGameActive;
             keys_processed_[GLFW_KEY_ENTER] = true;
+            StartLevelTime( 100 );  //!здесь нужно получить переменную из уровня
         }
     if (keys_[GLFW_KEY_W] && !keys_processed_[GLFW_KEY_W])
         {
@@ -146,6 +186,15 @@ if (state_ == GameState::kGameWin)
             state_ = GameState::kGameMenu;
         }
     }    
+
+  if (state_ == GameState::kGameOver)
+    {
+        if (keys_[GLFW_KEY_ENTER])
+        {
+            keys_processed_[GLFW_KEY_ENTER] = true; //Иначе сразу запустит уровень, без входа в меню
+            state_ = GameState::kGameMenu;
+        }
+    }      
 
 }
 
@@ -189,7 +238,7 @@ if (state_ == GameState::kGameActive)
 
 void Game::Render()
 {
-    if(state_ == GameState::kGameActive|| state_ == GameState::kGameMenu || state_ == GameState::kGameWin)
+    if(state_ == GameState::kGameActive|| state_ == GameState::kGameMenu || state_ == GameState::kGameWin|| state_ == GameState::kGameOver)
     {
     //Порядок отрисовки не забывай
     Renderer->DrawSprite(ResourceManager::GetTexture("background"), glm::vec2(0.0f, 0.0f), glm::vec2(screen_width_,screen_height_));
@@ -204,8 +253,12 @@ void Game::Render()
     Stand->Draw(*Renderer); 
     Cannon->Draw(*Renderer,glm::vec2(0.5f,0.67f));      
 
-    Player->Draw(*Renderer);   
+    Player->Draw(*Renderer);
 
+    Clock->Draw(*Renderer); 
+    Text->RenderText(timer_, 55.0f, 20.0f, 1.0f, glm::vec3(1.0f, 0.0f, 1.0f));
+
+    Text->RenderText(std::to_string(downs_targets_), (screen_width_ - 50), 20.0f, 1.0f, glm::vec3(1.0f, 0.0f, 1.0f));
     }
 
       if (state_ == GameState::kGameMenu)
@@ -219,11 +272,20 @@ void Game::Render()
         Text->RenderText("You WON!!!", 460.0, screen_height_ / 2 - 20.0, 1.0, glm::vec3(1.0f, 0.0f, 1.0f)  );
         Text->RenderText("Press ENTER to retry or ESC to quit", 280.0, screen_height_ / 2, 1.0, glm::vec3(1.0f, 0.0f, 1.0f));
     }     
+
+     if (state_ == GameState::kGameOver)
+    {
+        Text->RenderText("GAME OVER!!!", 460.0, screen_height_ / 2 - 20.0, 1.0, glm::vec3(1.0f, 0.0f, 1.0f)  );
+        Text->RenderText("Press ENTER to retry or ESC to quit", 280.0, screen_height_ / 2, 1.0, glm::vec3(1.0f, 0.0f, 1.0f));
+    }     
 }
 
 //TODO зависимость от количества уровней, можно испровить позже
 void Game::ResetLevel()
 {
+    timer_ = "";
+    downs_targets_ = 0;
+
     if (current_level_ == 0)
         levels_[0].Load("resources/levels/one.lvl", screen_width_, screen_height_);
     else if (current_level_ == 1)
@@ -304,6 +366,7 @@ void Game::DoCollisions()
 
                 Collision collision = CheckCollision(cannon_ball, target);
                     if(std::get<0>(collision)){  //TODO Добавить звуки и счетчики
+                        downs_targets_ += 1;
                         cannon_ball.Reset();
                         target.destroyed_ = true;
                     }
