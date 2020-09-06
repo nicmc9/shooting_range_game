@@ -4,48 +4,48 @@
 #include <sstream>
 #include <fstream>
 
-#define STB_IMAGE_IMPLEMENTATION //узнать что это интересно
+#define STB_IMAGE_IMPLEMENTATION 
 #include <stb_image.h>
 
 // Создание статических переменных
-std::map<std::string, Texture2D>    ResourceManager::Textures;
-std::map<std::string, Shader>       ResourceManager::Shaders;
+std::map<std::string, Texture2D>    ResourceManager::textures_;
+std::map<std::string, Shader>       ResourceManager::shaders_;
 
 
 Shader ResourceManager::LoadShader(const char* vShaderFile, const char* fShaderFile, const char* gShaderFile, std::string name)
 {
-    Shaders[name] = loadShaderFromFile(vShaderFile, fShaderFile, gShaderFile);
-    return Shaders[name];
+    shaders_[name] = LoadShaderFromFile(vShaderFile, fShaderFile, gShaderFile);
+    return shaders_[name];
 }
 
 Shader& ResourceManager::GetShader(std::string name)
 {
-    return Shaders[name];
+    return shaders_[name];
 }
 
 Texture2D ResourceManager::LoadTexture(const char* file, bool alpha, std::string name)
 {
-    Textures[name] = loadTextureFromFile(file, alpha);
-    return Textures[name];
+    textures_[name] = LoadTextureFromFile(file, alpha);
+    return textures_[name];
 
 }
 
 Texture2D& ResourceManager::GetTexture(std::string name)
 {
-    return Textures[name];
+    return textures_[name];
 }
 
 void ResourceManager::Clear()
 {
     // удалим все шейдерные программы из памяти
-    for (auto iter : Shaders)
-        glDeleteProgram(iter.second.ID);
+    for (auto iter : shaders_)
+        glDeleteProgram(iter.second.id_);
     // удалим все текстуры
-    for (auto iter : Textures)
-        glDeleteTextures(1, &iter.second.ID);
+    for (auto iter : textures_)
+        glDeleteTextures(1, &iter.second.id_);
 }
 
-Shader ResourceManager::loadShaderFromFile(const char* vShaderFile, const char* fShaderFile, const char* gShaderFile)
+Shader ResourceManager::LoadShaderFromFile(const char* vShaderFile, const char* fShaderFile, const char* gShaderFile)
 {
     //Получить исходный код по пути к файлу
     std::string vertexCode;
@@ -91,14 +91,14 @@ Shader ResourceManager::loadShaderFromFile(const char* vShaderFile, const char* 
     return shader;
 }
 
-Texture2D ResourceManager::loadTextureFromFile(const char* file, bool alpha)
+Texture2D ResourceManager::LoadTextureFromFile(const char* file, bool alpha)
 {
     // Создаем текстурный объект
     Texture2D texture;
     if (alpha)
     {
-        texture.Internal_Format = GL_RGBA;
-        texture.Image_Format = GL_RGBA;
+        texture.internal_format_ = GL_RGBA;
+        texture.image_format_ = GL_RGBA;
     }
     // загружаем изображение 
     int width, height, nrChannels;

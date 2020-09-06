@@ -10,16 +10,16 @@
 #include "game_level.h"
 
 //!Возможно нужно убрать избыточный уровень в векторе
-void GameLevel::Load(const char *file, unsigned int levelWidth, unsigned int levelHeight)
+void GameLevel::Load(const char *file, unsigned int window_width, unsigned int window_height)
 {
    
-    this->Targets.clear();
+    targets_.clear();
     // загрузка из файла
-    unsigned int targetCode = 0;
+    unsigned int target_code = 0;
     GameLevel level;
     std::string line;
     std::ifstream fstream(file);
-    std::vector<std::vector<unsigned int>> targetData;
+    std::vector<std::vector<unsigned int>> target_data;
     if (fstream)
     {
         while (std::getline(fstream, line)) // читаем по линиям из файла уровня
@@ -27,28 +27,28 @@ void GameLevel::Load(const char *file, unsigned int levelWidth, unsigned int lev
             
             std::istringstream sstream(line);
             std::vector<unsigned int> row;
-            while (sstream >> targetCode) {
-                row.push_back(targetCode);
+            while (sstream >> target_code) {
+                row.push_back(target_code);
             }
-            targetData.push_back(row);
+            target_data.push_back(row);
         
         }
-        if (targetData.size() > 0)
-           this->init(targetData, levelWidth, levelHeight);
+        if (target_data.size() > 0)
+           Init(target_data, window_width, window_height);
     }
 }
 
 //! Если будет удалять из памяти можно будет убрать проверку
 void GameLevel::Draw(SpriteRenderer &renderer)
 {
-    for (GameObject &target : this->Targets)
+    for (GameObject &target : this->targets_)
         if (!target.destroyed_ && target.activated_)  
             target.Draw(renderer);
 }
 void GameLevel::Update(float dt, unsigned int window_width, unsigned int window_height )
 {
    
-    for(GameObject& target : this->Targets)
+    for(GameObject& target : this->targets_)
         if (!target.destroyed_ && target.activated_)   
             target.Move(dt, window_width, window_height);
 }
@@ -56,18 +56,18 @@ void GameLevel::Update(float dt, unsigned int window_width, unsigned int window_
 //! Возможно замена на пустой объект
 bool GameLevel::IsCompleted()
 {
-    for (GameObject &target : this->Targets)
+    for (GameObject &target : this->targets_)
         if (!target.destroyed_)
             return false;
     return true;
 }
 
-void GameLevel::init(std::vector<std::vector<unsigned int>> targetData, unsigned int levelWidth, unsigned int levelHeight)
+void GameLevel::Init(std::vector<std::vector<unsigned int>> target_data, unsigned int window_width, unsigned int window_height)
 {
     
     // Вычисляем размерность кирпичей в зависимости от размера экрана и их количества
-    size_t numRows = targetData.size();
-    size_t numTargets = targetData[0].size(); //! Здесь учитываеться что все строки в файле одинаковой длинны
+    size_t num_rows = target_data.size();
+    size_t num_targets = target_data[0].size(); //! Здесь учитываеться что все строки в файле одинаковой длинны
     // мы можем индексировать вектор в [0], так как эта функция вызывается только если высота > 0
 
     float radius = 25.0f; 
@@ -81,16 +81,16 @@ void GameLevel::init(std::vector<std::vector<unsigned int>> targetData, unsigned
     std::uniform_int_distribution<> velocityX(150, 300); 
     std::uniform_int_distribution<> velocityY(70, 150); 
 
-    float unit_width = levelWidth / static_cast<float>(numTargets);
+    float unit_width = window_width / static_cast<float>(num_targets);
     
    
 
-    for (unsigned int y = 0; y < numRows; ++y)
+    for (unsigned int y = 0; y < num_rows; ++y)
     {
-        for (unsigned int x = 0; x < numTargets; ++x) //width == 5
+        for (unsigned int x = 0; x < num_targets; ++x) //width == 5
         {
                 // проверяем тип блока и назначаем свойства
-            if (targetData[y][x] == 1) // твердый
+            if (target_data[y][x] == 1) // твердый
             {
                
                 glm::vec2 pos(unit_width * x, posy);
@@ -104,10 +104,10 @@ void GameLevel::init(std::vector<std::vector<unsigned int>> targetData, unsigned
                 GameObject obj(pos, size, ResourceManager::GetTexture("target"), radius, glm::vec3(1.0f), velocity );
                 
 
-                this->Targets.push_back(obj);
+                this->targets_.push_back(obj);
                 
             }
-            else if (targetData[y][x] > 10)	// не твердый номер теперь означает цвет
+            else if (target_data[y][x] > 10)	// не твердый номер теперь означает цвет
             {
                 //TODO Другие типы мишеней
             }

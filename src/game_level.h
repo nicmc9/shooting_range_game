@@ -22,12 +22,12 @@ class GameLevel
 {
 public:
        
-    std::vector<GameObject> Targets; 
+    std::vector<GameObject> targets_; 
   
     GameLevel() { }
     //Загрузка уровня из файла
     //размеры области отрисовки кирпичей  levelWidth == screen_widht levelHeight== screenHeight/2
-    void Load(const char *file, unsigned int levelWidth, unsigned int levelHeight);
+    void Load(const char *file, unsigned int window_width, unsigned int window_height);
     // отрисовка всего уровня
     void Draw(SpriteRenderer &renderer);
     void Update(float dt, unsigned int window_width, unsigned int window_height);
@@ -36,5 +36,5 @@ public:
     bool IsCompleted();
 private:
     //инициализация уровня на основе данных их файла
-    void init(std::vector<std::vector<unsigned int>> targetData, unsigned int levelWidth, unsigned int levelHeight);
+    void Init(std::vector<std::vector<unsigned int>> target_data, unsigned int window_width, unsigned int window_height);
 };

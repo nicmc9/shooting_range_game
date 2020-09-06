@@ -17,9 +17,9 @@ void GameObject::Draw(SpriteRenderer &renderer)
     renderer.DrawSprite(sprite_, position_, size_, rotation_, color_);
 }
 
-void GameObject::DrawOrigin(SpriteRenderer &renderer)
+void GameObject::Draw(SpriteRenderer &renderer, glm::vec2 origin)
 {
-    renderer.DrawSpriteOrigin(sprite_, position_, size_, rotation_, color_);
+    renderer.DrawSprite(sprite_, position_, size_, rotation_, color_,origin);
 }
 
 void GameObject::Move(float dt, unsigned int window_width, unsigned int window_height)

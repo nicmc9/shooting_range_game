@@ -24,14 +24,12 @@ public:
        цвет передается в шейдер т.к текстуры мы загружаем в градациях серого 
     */
     void DrawSprite(Texture2D &texture, glm::vec2 position, glm::vec2 size = glm::vec2(10.0f, 10.0f),
-                    float rotate = 0.0f, glm::vec3 color = glm::vec3(1.0f));
-
-    void SpriteRenderer::DrawSpriteOrigin(Texture2D &texture, glm::vec2 position, glm::vec2 size, float rotate, glm::vec3 color);
+                    float rotate = 0.0f, glm::vec3 color = glm::vec3(1.0f), glm::vec2 origin = glm::vec2(0.5f,0.5f));
 private:
 
-    Shader       shader;  
-    unsigned int quadVAO;
+    Shader       shader_;  
+    GLuint quad_vao_;
     //Настраиваем буферы данных для спрайта
-    void initRenderData();
+    void InitRenderData();
 };
 

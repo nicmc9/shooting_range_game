@@ -22,7 +22,7 @@ Game::~Game()
 
 ///getters and setter
 
-auto& Game::targets()   {    return levels_[current_level_].Targets;   }
+auto& Game::targets()   {    return levels_[current_level_].targets_;   }
 void Game::set_state(GameState state)    {       state_ = state;       }
 void Game::set_keys(int key, bool state) {       keys_[key]  = state;  }
 void Game::set_keys_processed(int key, bool state) {       keys_processed_[key]  = state;  }
@@ -202,7 +202,7 @@ void Game::Render()
             cannon_ball.Draw(*Renderer);
 
     Stand->Draw(*Renderer); 
-    Cannon->DrawOrigin(*Renderer);      
+    Cannon->Draw(*Renderer,glm::vec2(0.5f,0.67f));      
 
     Player->Draw(*Renderer);   
 

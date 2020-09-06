@@ -16,12 +16,12 @@ class ResourceManager
 {
 public:
     // хранилище ресурсов
-    static std::map<std::string, Shader>    Shaders;
-    static std::map<std::string, Texture2D> Textures;
+    static std::map<std::string, Shader>    shaders_;
+    static std::map<std::string, Texture2D> textures_;
 
     //Загружает шейдер из файла генерирует программу и сохраняет в хранилище
     static Shader    LoadShader(const char* vShaderFile, const char* fShaderFile, const char* gShaderFile, std::string name);
-    static Shader&    GetShader(std::string name);
+    static Shader&   GetShader(std::string name);
 
 
     //Загружает и генерирует текстуру из файла и сохраняет в хранилище
@@ -35,8 +35,8 @@ private:
     ResourceManager() = delete;
 
    // загружает и генерирует шейдерную программу
-    static Shader    loadShaderFromFile(const char* vShaderFile, const char* fShaderFile, const char* gShaderFile = nullptr);
+    static Shader    LoadShaderFromFile(const char* vShaderFile, const char* fShaderFile, const char* gShaderFile = nullptr);
     // загружает и генерирует текстуру
-    static Texture2D loadTextureFromFile(const char* file, bool alpha);
+    static Texture2D LoadTextureFromFile(const char* file, bool alpha);
 };
 
