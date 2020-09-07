@@ -4,7 +4,10 @@
 #include "game.h"
 #include "utility.h"
 
+#include <irrKlang.h>
+using namespace irrklang;
 
+ISoundEngine *SoundEngine = createIrrKlangDevice();
 
 Game::Game(unsigned int width, unsigned int height)
     : state_(GameState::kGameActive), keys_(), screen_width_(width), screen_height_(height)
@@ -19,6 +22,9 @@ Game::~Game()
     delete Stand;
     delete Cannon;
     delete Text;
+    delete Clock;
+    delete Particles;
+    SoundEngine->drop();
 }
 
 ///getters and setter
@@ -32,12 +38,16 @@ void Game::set_keys_processed(int key, bool state) {       keys_processed_[key] 
 void Game::Init()
 {
     Shader sprite_shader = ResourceManager::LoadShader("resources/shaders/sprite.vs", "resources/shaders/sprite.fs", nullptr, "sprite");
-   
+    Shader particle_shader = ResourceManager::LoadShader("resources/shaders/particle.vs", "resources/shaders/particle.fs", nullptr, "particle");
+
     glm::mat4 projection = glm::ortho(0.0f, static_cast<float>(screen_width_), static_cast<float>(screen_height_), 0.0f, -1.0f, 1.0f);
     //uniform sampler2D image; индекс в наборе текстур для данного семплера, т.к всегда одна текстура ставим это здесь
     sprite_shader.Use().SetInteger("image", 0);
-    //матрица проекции одинаковая для всех спрайтов в игре поэтому ставим здесь
     sprite_shader.SetMatrix4("projection", projection);
+
+    particle_shader.Use().SetInteger("sprite", 0);
+    particle_shader.SetMatrix4("projection", projection);    
+
 
     //Загружаем все текстуры
     ResourceManager::LoadTexture("resources/textures/background.png", false, "background");
@@ -48,9 +58,10 @@ void Game::Init()
     ResourceManager::LoadTexture("resources/textures/Cannon.png", true, "cannon");
     ResourceManager::LoadTexture("resources/textures/Cannonball.png", true, "cannonball");
     ResourceManager::LoadTexture("resources/textures/Clock.png", true, "clock");
+    ResourceManager::LoadTexture("resources/textures/particle.png", true, "particle");
 
     Text = new TextRenderer(screen_width_, screen_height_);
-    Text->Load("resources/fonts/OCRAEXT.TTF", 24);
+    Text->Load("resources/fonts/Grandstander.ttf", 24);
 
     //Загружаем все уровни
     GameLevel one; one.Load("resources/levels/one.lvl", screen_width_, screen_height_);
@@ -91,6 +102,8 @@ void Game::Init()
    // счетчик сбитых мишеней
     downs_targets_  = 0;
 
+    Particles = new ParticleGenerator( particle_shader,  ResourceManager::GetTexture("particle"),  500  );
+
 }
 
 void Game::Update(float dt )
@@ -104,9 +117,11 @@ void Game::Update(float dt )
 
     //Обновляем возможность выстрела
     cannon_reload_time_ -= dt;
-    if(cannon_reload_time_ < 0) cannon_reload_time_ = 0.0f; //TODO  изменить послерасчета столкновений со снарядом
+    if(cannon_reload_time_ < 0) cannon_reload_time_ = 0.0f; //TODO  изменить после расчета столкновений со снарядом
 
-   //! необходимо закончить структуру загрузки уровня
+   //обновление частиц  2 == newParticles
+    Particles->Update(dt, *Cannon, 2);
+
    // проверка всех коллизий уже друг с другом
    // Удаляем все уничтоженные цели 
 
@@ -120,8 +135,7 @@ void Game::Update(float dt )
         state_ = GameState::kGameWin;
     }
  
-   DoCollisions();
-
+    DoCollisions();
 
     if (state_ == GameState::kGameActive)
     {
@@ -227,10 +241,11 @@ if (state_ == GameState::kGameActive)
    
         for(auto& cannon_ball : cannon_balls_){
             if (!cannon_ball.activated_) {
-                    
-              cannon_ball.velocity_ = glm::normalize(Player->position_ - cannon_ball.start_position_ )* kBulletStreight;
-              cannon_ball.activated_ = true;
-              cannon_reload_time_ = 1.0; // выстрел ставим время 
+               SoundEngine->play2D("resources/audio/shut.mp3", false);
+               cannon_ball.velocity_ = glm::normalize(Player->position_ - cannon_ball.start_position_ )* kBulletStreight;
+               cannon_ball.activated_ = true;
+               cannon_reload_time_ = 1.0; // выстрел ставим время 
+              
               break;      
           } 
        }
@@ -253,7 +268,8 @@ void Game::Render()
 
     Stand->Draw(*Renderer); 
     Cannon->Draw(*Renderer,glm::vec2(0.5f,0.67f));      
-
+    Particles->Draw();
+  
     Player->Draw(*Renderer);
 
     Clock->Draw(*Renderer); 
@@ -271,7 +287,7 @@ void Game::Render()
 
      if (state_ == GameState::kGameWin)
     {
-        Text->RenderText("You WON!!!", 460.0, screen_height_ / 2 - 20.0, 1.0, glm::vec3(1.0f, 0.0f, 1.0f)  );
+        Text->RenderText("You WON!!!", 420.0, screen_height_ / 2 - 20.0, 1.0, glm::vec3(1.0f, 0.0f, 1.0f)  );
         Text->RenderText("Press ENTER to retry or ESC to quit", 280.0, screen_height_ / 2, 1.0, glm::vec3(1.0f, 0.0f, 1.0f));
     }     
 
@@ -370,6 +386,7 @@ void Game::DoCollisions()
                     if(std::get<0>(collision)){  //TODO Добавить звуки
                         cannon_ball.Reset();
                         target.health_ -= 1.0f;
+                        target.color_ -= glm::vec3(0.0f,0.1f,0.2f);
 
                         if(target.health_ <= 0){
                             downs_targets_ += 1;

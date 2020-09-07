@@ -11,6 +11,7 @@
 #include "game_object.h"
 #include "bullet_object.h"
 #include "text_renderer.h"
+#include "particle_generator.h"
 
 //основные игровые состояния
 enum class GameState {
@@ -50,7 +51,8 @@ public:
     GameObject*     Cannon =    nullptr;
     GameObject*     Clock =     nullptr;
     TextRenderer*   Text =      nullptr;
-
+    ParticleGenerator* Particles = nullptr; 
+    
     //Это строка для вывода и данные для времени
     std::string timer_;
     double start_time_;
