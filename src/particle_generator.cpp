@@ -32,7 +32,7 @@ void ParticleGenerator::Update(float dt, GameObject &object, unsigned int new_pa
         if (p.life > 0.0f)
         {	// particle is alive, thus update
             p.position -= p.velocity * dt; 
-            p.color.a -= dt * 0.5f;
+            p.color.a -= dt * 1.0f;
         }
     }
 }
@@ -42,7 +42,7 @@ void ParticleGenerator::Update(float dt, GameObject &object, unsigned int new_pa
 void ParticleGenerator::Draw()
 {
     // use additive blending to give it a 'glow' effect
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+   // glBlendFunc(GL_SRC_ALPHA, GL_ONE);
     shader_.Use();
     for (auto& particle : particles_)
     {
@@ -57,7 +57,7 @@ void ParticleGenerator::Draw()
         }
     }
    
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  //  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 void ParticleGenerator::Init()
@@ -115,8 +115,10 @@ unsigned int ParticleGenerator::FirstUnusedParticle()
 void ParticleGenerator::RespawnParticle(Particle &particle, GameObject &object, glm::vec2 offset)
 {
     float random = ((rand() % 100) - 50) / 10.0f;
+    print("random",random);
     float rColor = 0.5f + ((rand() % 100) / 100.0f);
     particle.position =  object.position_ + random + offset;
+    particle.position.x += random;
     particle.color = glm::vec4(rColor, rColor, rColor, 1.0f);
     particle.life = 1.0f;
     particle.velocity = glm::vec2(0.0, 50.0f);

@@ -58,7 +58,7 @@ void Game::Init()
     ResourceManager::LoadTexture("resources/textures/Cannon.png", true, "cannon");
     ResourceManager::LoadTexture("resources/textures/Cannonball.png", true, "cannonball");
     ResourceManager::LoadTexture("resources/textures/Clock.png", true, "clock");
-    ResourceManager::LoadTexture("resources/textures/particle.png", true, "particle");
+    ResourceManager::LoadTexture("resources/textures/smoke2.png", true, "particle");
 
     Text = new TextRenderer(screen_width_, screen_height_);
     Text->Load("resources/fonts/Grandstander.ttf", 24);
@@ -120,7 +120,7 @@ void Game::Update(float dt )
     if(cannon_reload_time_ < 0) cannon_reload_time_ = 0.0f; //TODO  изменить после расчета столкновений со снарядом
 
    //обновление частиц  2 == newParticles
-    Particles->Update(dt, *Cannon, 2);
+    Particles->Update(dt, *Cannon, 1);
 
    // проверка всех коллизий уже друг с другом
    // Удаляем все уничтоженные цели 
