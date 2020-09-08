@@ -48,7 +48,6 @@ void Game::Init()
     particle_shader.Use().SetInteger("sprite", 0);
     particle_shader.SetMatrix4("projection", projection);    
 
-
     //Загружаем все текстуры
     ResourceManager::LoadTexture("resources/textures/background.png", false, "background");
     ResourceManager::LoadTexture("resources/textures/TargetP.png", true, "targetp");
@@ -81,7 +80,6 @@ void Game::Init()
     cannon_down_point_ = glm::vec2(screen_width_ / 2.0f,  cannon_pos.y + kCannonSize.y);
     cannon_reload_time_ = 0.0f; // 0 Можно стрелять после выстрела  увеличиваем
 
-
     glm::vec2 player_pos = glm::vec2(screen_width_ / 2.0f - kPlayerSize.x / 2.0f,  screen_height_/2 - kPlayerSize.y);
     Player = new GameObject(player_pos, kPlayerSize, ResourceManager::GetTexture("aim"), kPlayerSize.x/2);
 
@@ -98,12 +96,12 @@ void Game::Init()
     duration_ =  0.0;
 
     Clock = new GameObject(glm::vec2(20.0f,10.0f), glm::vec2(40.0f,40.0f), ResourceManager::GetTexture("clock"));
-   
-   // счетчик сбитых мишеней
-    downs_targets_  = 0;
 
+    // счетчик сбитых мишеней
+    downs_targets_  = 0;
     Particles = new ParticleGenerator( particle_shader,  ResourceManager::GetTexture("particle"),  500  );
 
+    //SoundEngine->play2D("resources/audio/fone.mp3", true);
 }
 
 void Game::Update(float dt )
@@ -117,10 +115,11 @@ void Game::Update(float dt )
 
     //Обновляем возможность выстрела
     cannon_reload_time_ -= dt;
+
     if(cannon_reload_time_ < 0) cannon_reload_time_ = 0.0f; //TODO  изменить после расчета столкновений со снарядом
 
    //обновление частиц  2 == newParticles
-    Particles->Update(dt, *Cannon, 1);
+    Particles->Update(dt, *Cannon, 2);
 
    // проверка всех коллизий уже друг с другом
    // Удаляем все уничтоженные цели 
@@ -237,16 +236,18 @@ void Game::MouseButtonClick(){
 
 if (state_ == GameState::kGameActive)
     {
-        if(cannon_reload_time_ > 0) return;
-   
+       if(cannon_reload_time_ > 0) return;
+
+        //Particles->set_work_time(); // пока время по умолчанию
+
         for(auto& cannon_ball : cannon_balls_){
             if (!cannon_ball.activated_) {
+                
                SoundEngine->play2D("resources/audio/shut.mp3", false);
                cannon_ball.velocity_ = glm::normalize(Player->position_ - cannon_ball.start_position_ )* kBulletStreight;
                cannon_ball.activated_ = true;
                cannon_reload_time_ = 1.0; // выстрел ставим время 
-              
-              break;      
+               break;      
           } 
        }
    }
@@ -265,7 +266,7 @@ void Game::Render()
     for(auto& cannon_ball : cannon_balls_)
         if (!cannon_ball.destroyed_ && cannon_ball.activated_)  
             cannon_ball.Draw(*Renderer);
-
+    
     Stand->Draw(*Renderer); 
     Cannon->Draw(*Renderer,glm::vec2(0.5f,0.67f));      
     Particles->Draw();
@@ -385,6 +386,9 @@ void Game::DoCollisions()
                 Collision collision = CheckCollision(cannon_ball, target);
                     if(std::get<0>(collision)){  //TODO Добавить звуки
                         cannon_ball.Reset();
+
+                        SoundEngine->play2D("resources/audio/boom.mp3", false);
+
                         target.health_ -= 1.0f;
                         target.color_ -= glm::vec3(0.0f,0.1f,0.2f);
 

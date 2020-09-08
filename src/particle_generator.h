@@ -28,6 +28,7 @@ struct Particle {
     Particle() : position(0.0f), velocity(0.0f), color(1.0f), life(0.0f) { }
 };
 
+const double kStartTime = 10;
 
 // ParticleGenerator acts as a container for rendering a large number of 
 // particles by repeatedly spawning and updating particles and killing 
@@ -41,11 +42,15 @@ public:
     void Update(float dt, GameObject &object, unsigned int newParticles, glm::vec2 offset = glm::vec2(0.0f, 0.0f));
     // render all particles
     void Draw();
+
+    void set_work_time(double new_time = kStartTime);
 private:
     // state
     std::vector<Particle> particles_;
     unsigned int amount_;
-    unsigned int last_used_particle_;
+    
+    double work_time_;
+   
     // render state
     Shader shader_;
     Texture2D texture_;

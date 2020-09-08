@@ -10,7 +10,7 @@
 #include "particle_generator.h"
 
 ParticleGenerator::ParticleGenerator(Shader shader, Texture2D texture, unsigned int amount)
-    : shader_(shader), texture_(texture), amount_(amount),last_used_particle_(0)
+    : shader_(shader), texture_(texture), amount_(amount), work_time_(kStartTime)
 {
     Init();
 }
@@ -18,45 +18,55 @@ ParticleGenerator::ParticleGenerator(Shader shader, Texture2D texture, unsigned 
 
 void ParticleGenerator::Update(float dt, GameObject &object, unsigned int new_particles, glm::vec2 offset)
 {
+   
+    //work_time_ -= dt;
     // add new particles 
-    for (unsigned int i = 0; i < new_particles; ++i)
-    {
-        int unused_particle = FirstUnusedParticle();
-        RespawnParticle(particles_[unused_particle], object, offset);
-    }
-    // update all particles
-    for (unsigned int i = 0; i < this->amount_; ++i)
-    {
-        Particle &p = particles_[i];
-        p.life -= dt; // reduce life
-        if (p.life > 0.0f)
-        {	// particle is alive, thus update
-            p.position -= p.velocity * dt; 
-            p.color.a -= dt * 1.0f;
+        for (unsigned int i = 0; i < new_particles; ++i)
+        {
+            int unused_particle = FirstUnusedParticle();
+            RespawnParticle(particles_[unused_particle], object, offset);
         }
-    }
+    // update all particles
+        for (unsigned int i = 0; i < this->amount_; ++i)
+        {
+            Particle &p = particles_[i];
+            p.life -= dt; // reduce life
+            if (p.life > 0.0f)
+            {	// particle is alive, thus update
+               
+                p.position -= p.velocity * dt; 
+                p.color.a -= dt * 1.0f;
+            }
+        }
+    
 }
 
+//TODO возможно добавить проверку ошибок
+void ParticleGenerator::set_work_time(double new_time){
+    work_time_ = new_time;
+    //print(new_time);
+}
 
 // render all particles
 void ParticleGenerator::Draw()
 {
-    // use additive blending to give it a 'glow' effect
+    //if(work_time_ < 0) return; 
+   // use additive blending to give it a 'glow' effect
    // glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-    shader_.Use();
-    for (auto& particle : particles_)
-    {
-        if (particle.life > 0.0f)
+       shader_.Use();
+       for (auto& particle : particles_)
         {
-            shader_.SetVector2f("offset", particle.position);
-            shader_.SetVector4f("color", particle.color);
-            texture_.Bind();
-            glBindVertexArray(vao_);
-            glDrawArrays(GL_TRIANGLES, 0, 6);
-            glBindVertexArray(0);
+            if (particle.life > 0.0f)
+            {
+                shader_.SetVector2f("offset", particle.position);
+                shader_.SetVector4f("color", particle.color);
+                texture_.Bind();
+                glBindVertexArray(vao_);
+                glDrawArrays(GL_TRIANGLES, 0, 6);
+                glBindVertexArray(0);
+            }
         }
-    }
-   
+    
   //  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
@@ -73,6 +83,7 @@ void ParticleGenerator::Init()
         1.0f, 1.0f, 1.0f, 1.0f,
         1.0f, 0.0f, 1.0f, 0.0f
     }; 
+
     glGenVertexArrays(1, &vao_);
     glGenBuffers(1, &vbo);
     glBindVertexArray(vao_);
@@ -90,7 +101,7 @@ void ParticleGenerator::Init()
 }
 
 // stores the index of the last particle used (for quick access to next dead particle)
-
+unsigned int last_used_particle_ = 0;
 unsigned int ParticleGenerator::FirstUnusedParticle()
 {
     // first search from last used particle, this will usually return almost instantly
@@ -114,12 +125,31 @@ unsigned int ParticleGenerator::FirstUnusedParticle()
 
 void ParticleGenerator::RespawnParticle(Particle &particle, GameObject &object, glm::vec2 offset)
 {
+    
+
     float random = ((rand() % 100) - 50) / 10.0f;
-    print("random",random);
     float rColor = 0.5f + ((rand() % 100) / 100.0f);
-    particle.position =  object.position_ + random + offset;
-    particle.position.x += random;
+
     particle.color = glm::vec4(rColor, rColor, rColor, 1.0f);
     particle.life = 1.0f;
-    particle.velocity = glm::vec2(0.0, 50.0f);
+    particle.velocity = glm::vec2(0,150);
+  
+    particle.position = glm::vec2(0.0f,0.0f); // без этого следующие 500 частиц получают сумму и улетают
+    glm::mat4 model = glm::mat4(1.0f);
+    glm::vec2 origin =  glm::vec2(0.5f,0.67f);
+
+    model = glm::translate(model, glm::vec3(object.position_.x,object.position_.y,  0.0f));
+
+    model = glm::translate(model, glm::vec3(origin.x * object.size_.x, origin.y * object.size_.y, 0.0f)); // возвращаем обратно
+    model = glm::rotate(model, glm::radians(object.rotation_), glm::vec3(0.0f, 0.0f, 1.0f)); //поворачиваем 
+    model = glm::translate(model, glm::vec3(-origin.x * object.size_.x, -origin.y * object.size_.y, 0.0f)); //переность ось вращения к ценру квадрата 
+    model = glm::translate(model, glm::vec3(object.size_.x/2.0f -10 ,0.0f,  0.0f)); //10 -scale
+    model = glm::scale(model, glm::vec3(object.size_ , 1.0f)); // масштабируем
+
+    particle.position =  model * glm::vec4(particle.position.x, particle.position.y , 0.0f, 1.0f);
+
+    particle.position.x  +=   random + offset.x;
+    particle.position.y  +=   random + offset.y; 
+
+    //print(particle.position.x,particle.position.y);
 }
