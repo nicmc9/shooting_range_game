@@ -1,4 +1,8 @@
-﻿# My First realization "Shooting Range" Game
+﻿# My realization "Shooting Range" Game
+
+
+![Game Menu](https://i.ibb.co/gvfMWRK/screen-game.png)
+
 
 The following techniques were used in the program
    - Modern OpenGL
