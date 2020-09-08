@@ -28,7 +28,7 @@ struct Particle {
     Particle() : position(0.0f), velocity(0.0f), color(1.0f), life(0.0f) { }
 };
 
-const double kStartTime = 150;/// 0.7;
+const double kStartTime = 0.7;
 
 // ParticleGenerator acts as a container for rendering a large number of 
 // particles by repeatedly spawning and updating particles and killing 

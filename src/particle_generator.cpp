@@ -128,7 +128,6 @@ unsigned int ParticleGenerator::FirstUnusedParticle()
 void ParticleGenerator::RespawnParticle(Particle &particle, GameObject &object, glm::vec2 offset)
 {
     
-
     float random = ((rand() % 100) - 50) / 10.0f;
     float rColor = 0.5f + ((rand() % 100) / 100.0f);
 
@@ -137,19 +136,26 @@ void ParticleGenerator::RespawnParticle(Particle &particle, GameObject &object, 
     particle.velocity = glm::vec2(0,150);
   
     particle.position = glm::vec2(0.0f,0.0f); // без этого следующие 500 частиц получают сумму и улетают
+
     glm::mat4 model = glm::mat4(1.0f);
     glm::vec2 origin =  glm::vec2(0.5f,0.67f);
 
-    auto offset_particle_cannon = object.size_.x/2.0f -10;
+    // выравниваем дым в зависимости от угла повората 10 это scale/2 в scale в шейдере
+    float offset_smoke_x = object.size_.x;
+    float offset_smoke_y = 0.0f;
+    if(object.rotation_ < -40.0f)
+        offset_smoke_x = object.size_.x/2.0f+10;
+    else
+        offset_smoke_x = object.size_.x/2.0f-10;
 
+    if(object.rotation_ > 40.0f)
+           offset_smoke_y  =10.0f;
+    
     model = glm::translate(model, glm::vec3(object.position_.x,object.position_.y,  0.0f));
-   
     model = glm::translate(model, glm::vec3(origin.x * object.size_.x, origin.y * object.size_.y, 0.0f)); // возвращаем обратно
     model = glm::rotate(model, glm::radians(object.rotation_), glm::vec3(0.0f, 0.0f, 1.0f)); //поворачиваем 
     model = glm::translate(model, glm::vec3(-origin.x * object.size_.x , -origin.y * object.size_.y, 0.0f)); //переность ось вращения к ценру квадрата 
-
-    model = glm::translate(model, glm::vec3(offset_particle_cannon ,0.0f,  0.0f)); //10 -scale
-   //model = glm::scale(model, glm::vec3(object.size_ , 1.0f)); // масштабируем
+    model = glm::translate(model, glm::vec3(offset_smoke_x ,offset_smoke_y ,  0.0f)); 
 
     particle.position =  model * glm::vec4(particle.position.x, particle.position.y , 0.0f, 1.0f);
 

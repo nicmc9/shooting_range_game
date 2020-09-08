@@ -76,7 +76,7 @@ int main()
     float deltaTime = 0.0f;
     float lastFrame = 0.0f;
 
-  
+    
     while (!glfwWindowShouldClose(window))
     {
         float currentFrame = glfwGetTime();
@@ -92,8 +92,8 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT);
      
         shooting_range.Render();
-
         glfwSwapBuffers(window);
+
     }
 
  // Очиска всех загруженных ресурсов
@@ -130,8 +130,10 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
     shooting_range.MouseInput(xpos, ypos);
 }
 
+
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods){
 
     if(button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
         shooting_range.MouseButtonClick();
 }
+
