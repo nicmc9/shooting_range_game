@@ -24,8 +24,14 @@ void GameObject::Draw(SpriteRenderer &renderer, glm::vec2 origin)
 
 void GameObject::Move(float dt, unsigned int window_width, unsigned int window_height)
 {
-        //Двигаем шар
-        position_ += velocity_*dt;  //Скорость содержит и направление ее обновляем в коллизиях
+           
+        if(velocity_.x == 200.0f){
+          position_.x += velocity_.x*dt; 
+          position_.y += glm::cos((float)glfwGetTime()) * 2;   
+        }else{
+           position_ += velocity_*dt; 
+        }
+
         //ПРоверка достижения границ экрана
         if(position_.x <= 0.0f)
         {

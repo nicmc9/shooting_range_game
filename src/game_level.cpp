@@ -124,7 +124,7 @@ void GameLevel::Init(std::vector<std::vector<unsigned int>> target_data, unsigne
                 float posy =  range_pos_y(gen);
                 glm::vec2 pos(unit_width * i, posy);
                 glm::vec2 size(radius * 2.0f, radius * 2.0f);
-                glm::vec2 velocity(100.0f, 0.0f);
+                glm::vec2 velocity(200.0f, 0.0f);
 
                 GameObject obj(pos, size, ResourceManager::GetTexture("targett"), radius, glm::vec3(1.0f), velocity, 2.0f );
                 

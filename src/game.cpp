@@ -66,8 +66,15 @@ void Game::Init()
     //Загружаем все уровни
     GameLevel one; one.Load("resources/levels/one.lvl", screen_width_, screen_height_);
     GameLevel two; two.Load("resources/levels/two.lvl", screen_width_, screen_height_);
+    GameLevel three; three.Load("resources/levels/three.lvl", screen_width_, screen_height_);
+    GameLevel four; four.Load("resources/levels/four.lvl", screen_width_, screen_height_);
+    GameLevel five; five.Load("resources/levels/five.lvl", screen_width_, screen_height_);
+    
     levels_.push_back(one);
     levels_.push_back(two);
+    levels_.push_back(three);
+    levels_.push_back(four);
+    levels_.push_back(five);
     current_level_ = 0;
 
     Renderer = new SpriteRenderer(sprite_shader);
@@ -176,11 +183,11 @@ if (state_ == GameState::kGameMenu)
         {
             state_ = GameState::kGameActive;
             keys_processed_[GLFW_KEY_ENTER] = true;
-            StartLevelTime( levels_[current_level_].level_time_ );  //!здесь нужно получить переменную из уровня
+            StartLevelTime( levels_[current_level_].level_time_ );  
         }
     if (keys_[GLFW_KEY_W] && !keys_processed_[GLFW_KEY_W])
         {
-           current_level_ = (current_level_ + 1) % 2; //Этого достаточно чтобы поменять отрисовку уровня 
+           current_level_ = (current_level_ + 1) % 5; //Этого достаточно чтобы поменять отрисовку уровня 
            keys_processed_[GLFW_KEY_W] = true;
         }
     if (keys_[GLFW_KEY_S] && !keys_processed_[GLFW_KEY_S])
@@ -188,7 +195,7 @@ if (state_ == GameState::kGameMenu)
            if (current_level_ > 0)
             --current_level_;
            else
-            current_level_ = 1;
+            current_level_ = 4;
             keys_processed_[GLFW_KEY_S] = true;
         }
 }  
@@ -278,7 +285,6 @@ void Game::Render()
     Text->RenderText(timer_, 55.0f, 20.0f, 1.0f, glm::vec3(1.0f, 0.0f, 1.0f));
 
     Text->RenderText(std::to_string(downs_targets_), (screen_width_ - 50), 20.0f, 1.0f, glm::vec3(1.0f, 0.0f, 1.0f));
-
     }
 
       if (state_ == GameState::kGameMenu)
@@ -310,6 +316,12 @@ void Game::ResetLevel()
         levels_[0].Load("resources/levels/one.lvl", screen_width_, screen_height_);
     else if (current_level_ == 1)
         levels_[1].Load("resources/levels/two.lvl", screen_width_, screen_height_);
+    else if (current_level_ == 2)
+        levels_[2].Load("resources/levels/three.lvl", screen_width_, screen_height_);
+    else if (current_level_ == 3)
+        levels_[3].Load("resources/levels/four.lvl", screen_width_, screen_height_);
+    else if (current_level_ == 4)
+        levels_[4].Load("resources/levels/five.lvl", screen_width_, screen_height_);    
 }
 
 void Game::ResetPlayer()
@@ -385,7 +397,7 @@ void Game::DoCollisions()
                for(auto& target: targets()){
 
                 Collision collision = CheckCollision(cannon_ball, target);
-                    if(std::get<0>(collision)){  //TODO Добавить звуки
+                    if(std::get<0>(collision)){  
                         cannon_ball.Reset();
 
                         SoundEngine->play2D("resources/audio/boom.mp3", false);
