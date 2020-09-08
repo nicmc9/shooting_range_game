@@ -10,7 +10,6 @@
 
 #include "game_object.h"
 
-
 GameObject::GameObject() 
     : position_(0.0f, 0.0f), size_(1.0f, 1.0f), velocity_(0.0f),
       color_(1.0f), rotation_(0.0f), radius_(0.0f), sprite_(),
@@ -29,12 +28,13 @@ void GameObject::Draw(SpriteRenderer &renderer)
 
 void GameObject::Draw(SpriteRenderer &renderer, glm::vec2 origin)
 {
-    renderer.DrawSprite(sprite_, position_, size_, rotation_, color_,origin);
+    renderer.DrawSprite(sprite_, position_, size_, rotation_, color_, origin);
 }
+
 
 void GameObject::Move(float dt, unsigned int window_width, unsigned int window_height)
 {
-        //меняем вид движения у 3 й цели , возможно сделать через классы, но здесь гораздо меньше кода
+        //меняем вид движения у 3 й цели , возможно сделать через наследование, но так гораздо меньше кода
         if(velocity_.x == 200.0f){
           position_.x += velocity_.x*dt; 
           position_.y += glm::cos((float)glfwGetTime()) * 2;   
@@ -42,7 +42,7 @@ void GameObject::Move(float dt, unsigned int window_width, unsigned int window_h
            position_ += velocity_*dt; 
         }
 
-        //ПРоверка достижения границ экрана
+        //Пооверка достижения границ экрана
         if(position_.x <= 0.0f)
         {
             velocity_.x = - velocity_.x; // меняем направление скорости
@@ -62,12 +62,9 @@ void GameObject::Move(float dt, unsigned int window_width, unsigned int window_h
             velocity_.y = - velocity_.y;
             position_.y = window_height - size_.y*2;
         }
-   
-  
 }
 
 void    GameObject::set_position_bound(glm::vec2 pos, unsigned int width, unsigned int height ){
-
         position_  = pos; 
 
     //ПРоверка достижения границ экрана

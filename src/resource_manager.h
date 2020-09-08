@@ -35,7 +35,6 @@ public:
 
     //Загружает и генерирует текстуру из файла и сохраняет в хранилище
     static Texture2D LoadTexture(const char* file, bool alpha, std::string name);
-    
     static Texture2D& GetTexture(std::string name);
 
     // очиска шейдеров и текстур

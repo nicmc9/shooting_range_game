@@ -37,7 +37,7 @@ public:
     virtual void Draw(SpriteRenderer &renderer, glm::vec2 origin);
     virtual void Move(float dt, unsigned int window_width,unsigned int window_height);
    
-    void       set_position_bound(glm::vec2 pos, unsigned int width, unsigned int height);
+    void  set_position_bound(glm::vec2 pos, unsigned int width, unsigned int height);
 
 public:
   // Состояния рендер

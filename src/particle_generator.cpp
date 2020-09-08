@@ -15,6 +15,7 @@ ParticleGenerator::ParticleGenerator(Shader shader, Texture2D texture, unsigned 
     Init();
 }
 
+//Функция делает запрос на создание новых частиц и обнобляет данные текущих
 
 void ParticleGenerator::Update(float dt, GameObject &object, unsigned int new_particles, glm::vec2 offset)
 {
@@ -32,49 +33,45 @@ void ParticleGenerator::Update(float dt, GameObject &object, unsigned int new_pa
         for (unsigned int i = 0; i < this->amount_; ++i)
         {
             Particle &p = particles_[i];
-            p.life -= dt; // reduce life
+            p.life -= dt; // уменьшаем жизнь
             if (p.life > 0.0f)
-            {	// particle is alive, thus update
-               
+            {	
+               // если жива обновляем позицию и делаем прозрачнее
                 p.position -= p.velocity * dt; 
                 p.color.a -= dt * 1.0f;
             }
         }
-    
 }
 
-//TODO возможно добавить проверку ошибок
-void ParticleGenerator::set_work_time(double new_time){
+
+void ParticleGenerator::set_work_time(double new_time)
+{
     work_time_ = new_time;
-    //print(new_time);
 }
 
-// render all particles
+// отрисовка новых частиц
 void ParticleGenerator::Draw()
 {
     if(work_time_ < 0) return; 
-   // use additive blending to give it a 'glow' effect
-   // glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-       shader_.Use();
-       for (auto& particle : particles_)
-        {
-            if (particle.life > 0.0f)
-            {
-                shader_.SetVector2f("offset", particle.position);
-                shader_.SetVector4f("color", particle.color);
-                texture_.Bind();
-                glBindVertexArray(vao_);
-                glDrawArrays(GL_TRIANGLES, 0, 6);
-                glBindVertexArray(0);
-            }
-        }
-    
-  //  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-}
 
+    shader_.Use();
+    for (auto& particle : particles_)
+    {
+       if (particle.life > 0.0f)
+           {
+            shader_.SetVector2f("offset", particle.position);
+            shader_.SetVector4f("color", particle.color);
+            texture_.Bind();
+            glBindVertexArray(vao_);
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+            glBindVertexArray(0);
+           }
+    }
+}
+// инициализация  происходит во время загрузки игры
 void ParticleGenerator::Init()
 {
-    // set up mesh and attribute properties
+    // настраиваем вершинный буфер
     unsigned int vbo;
     float particle_quad[] = {
         0.0f, 1.0f, 0.0f, 1.0f,
@@ -97,37 +94,36 @@ void ParticleGenerator::Init()
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
     glBindVertexArray(0);
 
-    // create this->amount default particle instances
+    //при загрузке сразу создаем все объекты частиц
+    //чтобы в  работе не выделять память
     for (unsigned int i = 0; i < amount_; ++i)
         particles_.push_back(Particle());
 }
 
-// stores the index of the last particle used (for quick access to next dead particle)
-
+// функция возвращаем индекс частицы которую мы будем возродать
 unsigned int ParticleGenerator::FirstUnusedParticle()
 {
-    // first search from last used particle, this will usually return almost instantly
+    // сначала ище от предыдущего индекса
     for (unsigned int i = last_used_particle_; i < amount_; ++i){
         if (particles_[i].life <= 0.0f){
             last_used_particle_ = i;
             return i;
         }
     }
-    // otherwise, do a linear search
+    // если не вышло то используем поиск от начала
     for (unsigned int i = 0; i < last_used_particle_; ++i){
         if (particles_[i].life <= 0.0f){
             last_used_particle_ = i;
             return i;
         }
     }
-    // all particles are taken, override the first one (note that if it repeatedly hits this case, more particles should be reserved)
+    // если не вышло отдаем просто первую частицу , хотя эта ситуация нежелательна 
     last_used_particle_ = 0;
     return 0;
 }
 
 void ParticleGenerator::RespawnParticle(Particle &particle, GameObject &object, glm::vec2 offset)
 {
-    
     float random = ((rand() % 100) - 50) / 10.0f;
     float rColor = 0.5f + ((rand() % 100) / 100.0f);
 
@@ -161,6 +157,4 @@ void ParticleGenerator::RespawnParticle(Particle &particle, GameObject &object, 
 
     particle.position.x  +=   random + offset.x;
     particle.position.y  +=   random + offset.y; 
-
-    //print(particle.position.x,particle.position.y);
 }

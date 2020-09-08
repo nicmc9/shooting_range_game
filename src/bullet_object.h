@@ -13,14 +13,11 @@
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 
- 
 #include "game_object.h"
 #include "sprite_renderer.h"
 #include "resource_manager.h"
 
 #include "utility.h"
-
-
 
 class BulletObject : public GameObject
 {
@@ -31,9 +28,7 @@ public:
 
    virtual void Move(float dt, unsigned int window_width,unsigned int window_height) override;
    void         Reset();
-
- 
-
+   
 public:
    glm::vec2 start_position_;
 };

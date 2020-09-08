@@ -16,10 +16,8 @@
 #include <random>  
 #include <ctime> 
 
-
 #include "game_level.h"
 
-//!Возможно нужно убрать избыточный уровень в векторе
 void GameLevel::Load(const char *file, unsigned int window_width, unsigned int window_height)
 {
    
@@ -48,7 +46,6 @@ void GameLevel::Load(const char *file, unsigned int window_width, unsigned int w
     }
 }
 
-//! Если будет удалять из памяти можно будет убрать проверку
 void GameLevel::Draw(SpriteRenderer &renderer)
 {
     for (auto&target : targets_)
@@ -57,13 +54,12 @@ void GameLevel::Draw(SpriteRenderer &renderer)
 }
 void GameLevel::Update(float dt, unsigned int window_width, unsigned int window_height )
 {
-   
-    for(auto& target : targets_)
+   for(auto& target : targets_)
         if (!target.destroyed_ && target.activated_)   
             target.Move(dt, window_width, window_height);
 }
 
-//! Возможно замена на пустой объект
+
 bool GameLevel::IsCompleted()
 {
     for (auto &target : targets_)
@@ -77,7 +73,8 @@ void GameLevel::Init(std::vector<std::vector<unsigned int>> target_data, unsigne
     //TODO ОБязательно сделать проверку ошибок
     // Вычисляем размерность кирпичей в зависимости от размера экрана и их количества
     size_t num_rows = target_data.size();
-    size_t num_targets = target_data[0].size(); //! Здесь учитываеться что все строки в файле одинаковой длинны
+    if(!num_rows) print("Error load  level");
+    size_t num_targets = target_data[0].size(); 
     // мы можем индексировать вектор в [0], так как эта функция вызывается только если высота > 0
   
     if(!target_data[1][0]) print("Error load time level");
@@ -135,7 +132,6 @@ void GameLevel::Init(std::vector<std::vector<unsigned int>> target_data, unsigne
                 glm::vec2 pos(unit_width * i, posy);
                 glm::vec2 size(radius * 2.0f, radius * 2.0f);
                 glm::vec2 velocity(200.0f, 0.0f);
-
                 GameObject obj(pos, size, ResourceManager::GetTexture("targett"), radius, glm::vec3(1.0f), velocity, 2.0f );
                 
                 targets_.push_back(obj);

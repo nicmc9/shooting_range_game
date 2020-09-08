@@ -30,35 +30,28 @@ struct Particle {
 
 const double kStartTime = 0.7;
 
-// ParticleGenerator acts as a container for rendering a large number of 
-// particles by repeatedly spawning and updating particles and killing 
-// them after a given amount of time.
 class ParticleGenerator
 {
 public:
-    // constructor
+ 
     ParticleGenerator(Shader shader, Texture2D texture, unsigned int amount);
-    // update all particles
     void Update(float dt, GameObject &object, unsigned int newParticles, glm::vec2 offset = glm::vec2(0.0f, 0.0f));
-    // render all particles
     void Draw();
 
     void set_work_time(double new_time = kStartTime);
 private:
-    // state
+
     std::vector<Particle> particles_;
     unsigned int amount_;
     unsigned int last_used_particle_;
     double work_time_;
    
-    // render state
+    
     Shader shader_;
     Texture2D texture_;
     GLuint vao_;
-    // initializes buffer and vertex attributes
+   
     void Init();
-    // returns the first Particle index that's currently unused e.g. Life <= 0.0f or 0 if no particle is currently inactive
     unsigned int FirstUnusedParticle();
-    // respawns particle
     void RespawnParticle(Particle &particle, GameObject &object, glm::vec2 offset = glm::vec2(0.0f, 0.0f));
 };

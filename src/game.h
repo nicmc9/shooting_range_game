@@ -7,14 +7,11 @@
 ** Creative Commons, either version 4 of the License, or (at your
 ** option) any later version.
 ******************************************************************/
+#include <vector>
+#include <string>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-
-
-#include <vector>
-#include <string>
-#include <chrono>
 
 #include "sprite_renderer.h"
 #include "game_level.h"
@@ -48,20 +45,21 @@ public:
     enum class Direction { kUp, kRight, kDown, kLeft }; 
     using Collision = std::tuple<bool, Direction, glm::vec2>; 
     
+    //геттеры и сеттеры
     auto& targets();
     void set_state(GameState state);
     void set_keys(int key, bool state);
     void set_keys_processed(int key, bool state);
 
-    //!Определить время игры
-  
+     
     SpriteRenderer* Renderer =  nullptr;
     GameObject*     Player =    nullptr;
     GameObject*     Stand =     nullptr;
     GameObject*     Cannon =    nullptr;
     GameObject*     Clock =     nullptr;
     TextRenderer*   Text =      nullptr;
-    ParticleGenerator* Particles = nullptr; 
+    ParticleGenerator* Particles = nullptr;
+     
     
     //Это строка для вывода и данные для времени
     std::string timer_;
@@ -83,9 +81,7 @@ private:
     
     void StartLevelTime(double duration);
     bool IsGameOver();
-    // сброс параметров 
     void ResetLevel();
-    void ResetPlayer();
     void DoCollisions();
 
 private:
@@ -96,7 +92,7 @@ private:
 
     GameState               state_;
     bool                    keys_[1024];
-    bool                    keys_processed_[1024]; // Обработка нажатив для меню
+    bool                    keys_processed_[1024];        // Обработка нажатий для меню
     unsigned int            screen_width_, screen_height_;
  
     std::vector<BulletObject> cannon_balls_;

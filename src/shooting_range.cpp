@@ -67,26 +67,26 @@ int main()
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  //Инициализация игры и состояния
+    //Инициализация игры и состояния
     shooting_range.Init();
     shooting_range.set_state(GameState::kGameMenu);
     
     // deltaTime variables
     // -------------------
-    float deltaTime = 0.0f;
-    float lastFrame = 0.0f;
+    float delta_time = 0.0f;
+    float last_frame = 0.0f;
 
     
     while (!glfwWindowShouldClose(window))
     {
-        float currentFrame = glfwGetTime();
+        float current_frame = glfwGetTime();
         
-        deltaTime = currentFrame - lastFrame;
-        lastFrame = currentFrame;
+        delta_time = current_frame - last_frame;
+        last_frame = current_frame;
         glfwPollEvents();
         
-        shooting_range.ProcessInput(deltaTime);
-        shooting_range.Update(deltaTime);
+        shooting_range.ProcessInput(delta_time);
+        shooting_range.Update(delta_time);
 
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);

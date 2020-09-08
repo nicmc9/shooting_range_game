@@ -20,10 +20,7 @@ using namespace irrklang;
 ISoundEngine *SoundEngine = createIrrKlangDevice();
 
 Game::Game(unsigned int width, unsigned int height)
-    : state_(GameState::kGameActive), keys_(), screen_width_(width), screen_height_(height)
-{
-    
-}
+    : state_(GameState::kGameActive), keys_(), screen_width_(width), screen_height_(height){}
 
 Game::~Game()
 {
@@ -37,7 +34,7 @@ Game::~Game()
     SoundEngine->drop();
 }
 
-///getters and setter
+
 
 auto& Game::targets()   {    return levels_[current_level_].targets_;   }
 void Game::set_state(GameState state)    {       state_ = state;       }
@@ -74,11 +71,11 @@ void Game::Init()
     Text->Load("resources/fonts/Grandstander.ttf", 24);
 
     //Загружаем все уровни
-    GameLevel one; one.Load("resources/levels/one.lvl", screen_width_, screen_height_);
-    GameLevel two; two.Load("resources/levels/two.lvl", screen_width_, screen_height_);
+    GameLevel one;   one.Load("resources/levels/one.lvl", screen_width_, screen_height_);
+    GameLevel two;   two.Load("resources/levels/two.lvl", screen_width_, screen_height_);
     GameLevel three; three.Load("resources/levels/three.lvl", screen_width_, screen_height_);
-    GameLevel four; four.Load("resources/levels/four.lvl", screen_width_, screen_height_);
-    GameLevel five; five.Load("resources/levels/five.lvl", screen_width_, screen_height_);
+    GameLevel four;  four.Load("resources/levels/four.lvl", screen_width_, screen_height_);
+    GameLevel five;  five.Load("resources/levels/five.lvl", screen_width_, screen_height_);
     
     levels_.push_back(one);
     levels_.push_back(two);
@@ -96,20 +93,19 @@ void Game::Init()
     glm::vec2 cannon_pos = glm::vec2(screen_width_ / 2.0f - kCannonSize.x / 2.0f, screen_height_ - kCannonSize.y - kStandSize.y/2);
     Cannon = new GameObject(cannon_pos, kCannonSize, ResourceManager::GetTexture("cannon"));
     cannon_down_point_ = glm::vec2(screen_width_ / 2.0f,  cannon_pos.y + kCannonSize.y);
-    cannon_reload_time_ = 0.0f; // 0 Можно стрелять после выстрела  увеличиваем
+    cannon_reload_time_ = 0.0f; // 0 Можно стрелять, после выстрела  увеличиваем
 
     glm::vec2 player_pos = glm::vec2(screen_width_ / 2.0f - kPlayerSize.x / 2.0f,  screen_height_/2 - kPlayerSize.y);
     Player = new GameObject(player_pos, kPlayerSize, ResourceManager::GetTexture("aim"), kPlayerSize.x/2);
 
     //пока сделаем 3 снаряда    
-
     glm::vec2 bullet_pos = glm::vec2(screen_width_ / 2.0f - kBulletSize.x / 2.0f,  screen_height_ - kBulletSize.y- kStandSize.y/2);
     //Пока делаем 3 возможных снаряда
     for(int i = 0; i < 3 ; i++){
         cannon_balls_.emplace_back(BulletObject(bullet_pos,  ResourceManager::GetTexture("cannonball"), bullet_pos, kBulletSize.x/2));
     }
 
-    //Данные времен и объект часов    
+    //Данные времени и объект часов    
     start_time_ = 0.0;
     duration_ =  0.0;
 
@@ -117,16 +113,18 @@ void Game::Init()
 
     // счетчик сбитых мишеней
     downs_targets_  = 0;
+    //инициализация частиц дыма
     Particles = new ParticleGenerator( particle_shader,  ResourceManager::GetTexture("particle"),  500  );
-
+    //Запуск фонового звука
     SoundEngine->play2D("resources/audio/fone.mp3", true);
 }
 
 void Game::Update(float dt )
 {
     // В ходе игры мишень двигаеться и проверяет столкновение со стеной но не друг с другом
-    levels_[current_level_].Update(dt, screen_width_, screen_height_);
+   levels_[current_level_].Update(dt, screen_width_, screen_height_);
 
+   // обновляем движение ядер если они активны
    for(auto& cannon_ball : cannon_balls_)
         if (!cannon_ball.destroyed_ && cannon_ball.activated_)  
             cannon_ball.Move(dt, screen_width_, screen_height_);
@@ -148,7 +146,6 @@ void Game::Update(float dt )
     if (state_ == GameState::kGameActive && targets().size()==0)
     {
         ResetLevel();
-        ResetPlayer();
         state_ = GameState::kGameWin;
     }
  
@@ -159,7 +156,6 @@ void Game::Update(float dt )
         if(IsGameOver()) {
         
              ResetLevel();
-             ResetPlayer();
              state_ = GameState::kGameOver;
         }
     }
@@ -275,10 +271,10 @@ void Game::Render()
 {
     if(state_ == GameState::kGameActive|| state_ == GameState::kGameMenu || state_ == GameState::kGameWin|| state_ == GameState::kGameOver)
     {
-    //Порядок отрисовки не забывай
+    
     Renderer->DrawSprite(ResourceManager::GetTexture("background"), glm::vec2(0.0f, 0.0f), glm::vec2(screen_width_,screen_height_));
     
-    //Логигу отрисовки уровня отдаем самому уровню - вместе с настренным рисовальшиком
+    //Логику отрисовки уровня отдаем самому уровню - вместе с настренным рисовальшиком
     levels_[current_level_].Draw(*Renderer);
     
     for(auto& cannon_ball : cannon_balls_)
@@ -292,8 +288,8 @@ void Game::Render()
     Player->Draw(*Renderer);
 
     Clock->Draw(*Renderer); 
-    Text->RenderText(timer_, 55.0f, 20.0f, 1.0f, glm::vec3(1.0f, 0.0f, 1.0f));
 
+    Text->RenderText(timer_, 55.0f, 20.0f, 1.0f, glm::vec3(1.0f, 0.0f, 1.0f));
     Text->RenderText(std::to_string(downs_targets_), (screen_width_ - 50), 20.0f, 1.0f, glm::vec3(1.0f, 0.0f, 1.0f));
     }
 
@@ -316,16 +312,17 @@ void Game::Render()
     }     
 }
 
-//TODO зависимость от количества уровней, можно испровить позже
+//Полностью перезагружаем уровень
+//мишени также получают разные 
 void Game::ResetLevel()
 {
     timer_ = "";
     downs_targets_ = 0;
 
     if (current_level_ == 0)
-        levels_[0].Load("resources/levels/one.lvl", screen_width_, screen_height_);
+        levels_[0].Load("resources/levels/one.lvl", screen_width_,   screen_height_);
     else if (current_level_ == 1)
-        levels_[1].Load("resources/levels/two.lvl", screen_width_, screen_height_);
+        levels_[1].Load("resources/levels/two.lvl", screen_width_,   screen_height_);
     else if (current_level_ == 2)
         levels_[2].Load("resources/levels/three.lvl", screen_width_, screen_height_);
     else if (current_level_ == 3)
@@ -334,12 +331,8 @@ void Game::ResetLevel()
         levels_[4].Load("resources/levels/five.lvl", screen_width_, screen_height_);    
 }
 
-void Game::ResetPlayer()
-{
 
-}
 //Определение столкновений
-//TODO сделать статическими
 Game::Collision CheckCollision(GameObject &one, GameObject &two);
 Game::Direction VectorDirection(glm::vec2 target);
 
@@ -351,7 +344,9 @@ void Game::DoCollisions()
 
     if(size == 0) return; 
 
-    for(int i = 0; i < size-1 ; i++)
+    // Оптимизированный цикл  перебора одной коллекции
+    
+    for(int i = 0; i < size-1 ; i++) 
     {
         auto& current_aim = targets()[i];
 
@@ -359,7 +354,7 @@ void Game::DoCollisions()
         {
             auto& next_aim = targets()[j];
             //Collision collision = CheckCollision(current_aim, next_aim);
-            auto [is_collision, direction, diff_vector] = CheckCollision(current_aim, next_aim);
+            auto [is_collision, direction, diff_vector] = CheckCollision(current_aim, next_aim); //декомпозиция
 
             if(is_collision){
                    if(direction == Direction::kLeft || direction == Direction::kRight)
@@ -409,7 +404,6 @@ void Game::DoCollisions()
                 Collision collision = CheckCollision(cannon_ball, target);
                     if(std::get<0>(collision)){  
                         cannon_ball.Reset();
-
                         SoundEngine->play2D("resources/audio/boom.mp3", false);
 
                         target.health_ -= 1.0f;
@@ -443,7 +437,7 @@ Game::Collision CheckCollision(GameObject &one, GameObject &two) // AABB - Circl
 
 Game::Direction VectorDirection(glm::vec2 target)
 {
-    //TODO еще раз проверить векторы
+  
     glm::vec2 compass[] = {
         glm::vec2(0.0f, 1.0f),	// up
         glm::vec2(1.0f, 0.0f),	// right
