@@ -149,7 +149,7 @@ void ParticleGenerator::RespawnParticle(Particle &particle, GameObject &object, 
     model = glm::translate(model, glm::vec3(-origin.x * object.size_.x , -origin.y * object.size_.y, 0.0f)); //переность ось вращения к ценру квадрата 
 
     model = glm::translate(model, glm::vec3(offset_particle_cannon ,0.0f,  0.0f)); //10 -scale
-    model = glm::scale(model, glm::vec3(object.size_ , 1.0f)); // масштабируем
+   //model = glm::scale(model, glm::vec3(object.size_ , 1.0f)); // масштабируем
 
     particle.position =  model * glm::vec4(particle.position.x, particle.position.y , 0.0f, 1.0f);
 

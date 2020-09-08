@@ -1,4 +1,14 @@
-﻿#include <glad/glad.h>
+﻿/*******************************************************************
+** This code is part of ShootingRange game.
+** Created Baleyv Nikolay nicmc9@gmail.com
+**
+** ShootingRange is free software: you can redistribute it and/or modify
+** it under the terms of the CC BY 4.0 license as published by
+** Creative Commons, either version 4 of the License, or (at your
+** option) any later version.
+******************************************************************/
+
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
 
@@ -124,5 +134,4 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 
     if(button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
         shooting_range.MouseButtonClick();
-    
 }

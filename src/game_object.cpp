@@ -24,7 +24,7 @@ void GameObject::Draw(SpriteRenderer &renderer, glm::vec2 origin)
 
 void GameObject::Move(float dt, unsigned int window_width, unsigned int window_height)
 {
-           
+        //меняем вид движения у 3 й цели , возможно сделать через классы, но здесь гораздо меньше кода
         if(velocity_.x == 200.0f){
           position_.x += velocity_.x*dt; 
           position_.y += glm::cos((float)glfwGetTime()) * 2;   

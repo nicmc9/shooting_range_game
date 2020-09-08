@@ -109,7 +109,7 @@ void Game::Init()
     downs_targets_  = 0;
     Particles = new ParticleGenerator( particle_shader,  ResourceManager::GetTexture("particle"),  500  );
 
-    //SoundEngine->play2D("resources/audio/fone.mp3", true);
+    SoundEngine->play2D("resources/audio/fone.mp3", true);
 }
 
 void Game::Update(float dt )
@@ -302,7 +302,7 @@ void Game::Render()
      if (state_ == GameState::kGameOver)
     {
         Text->RenderText("GAME OVER!!!", 460.0, screen_height_ / 2 - 20.0, 1.0, glm::vec3(1.0f, 0.0f, 1.0f)  );
-        Text->RenderText("Press ENTER to retry or ESC to quit", 280.0, screen_height_ / 2, 1.0, glm::vec3(1.0f, 0.0f, 1.0f));
+        Text->RenderText("Press ENTER to retry or ESC to quit", 300.0, screen_height_ / 2, 1.0, glm::vec3(1.0f, 0.0f, 1.0f));
     }     
 }
 
