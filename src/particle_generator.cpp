@@ -10,7 +10,7 @@
 #include "particle_generator.h"
 
 ParticleGenerator::ParticleGenerator(Shader shader, Texture2D texture, unsigned int amount)
-    : shader_(shader), texture_(texture), amount_(amount), work_time_(kStartTime)
+    : shader_(shader), texture_(texture), amount_(amount), work_time_(kStartTime), last_used_particle_(0)
 {
     Init();
 }
@@ -19,7 +19,9 @@ ParticleGenerator::ParticleGenerator(Shader shader, Texture2D texture, unsigned 
 void ParticleGenerator::Update(float dt, GameObject &object, unsigned int new_particles, glm::vec2 offset)
 {
    
-    //work_time_ -= dt;
+       work_time_ -= dt;
+        if(work_time_ < 0) return;
+
     // add new particles 
         for (unsigned int i = 0; i < new_particles; ++i)
         {
@@ -50,7 +52,7 @@ void ParticleGenerator::set_work_time(double new_time){
 // render all particles
 void ParticleGenerator::Draw()
 {
-    //if(work_time_ < 0) return; 
+    if(work_time_ < 0) return; 
    // use additive blending to give it a 'glow' effect
    // glBlendFunc(GL_SRC_ALPHA, GL_ONE);
        shader_.Use();
@@ -101,7 +103,7 @@ void ParticleGenerator::Init()
 }
 
 // stores the index of the last particle used (for quick access to next dead particle)
-unsigned int last_used_particle_ = 0;
+
 unsigned int ParticleGenerator::FirstUnusedParticle()
 {
     // first search from last used particle, this will usually return almost instantly
@@ -138,12 +140,15 @@ void ParticleGenerator::RespawnParticle(Particle &particle, GameObject &object, 
     glm::mat4 model = glm::mat4(1.0f);
     glm::vec2 origin =  glm::vec2(0.5f,0.67f);
 
-    model = glm::translate(model, glm::vec3(object.position_.x,object.position_.y,  0.0f));
+    auto offset_particle_cannon = object.size_.x/2.0f -10;
 
+    model = glm::translate(model, glm::vec3(object.position_.x,object.position_.y,  0.0f));
+   
     model = glm::translate(model, glm::vec3(origin.x * object.size_.x, origin.y * object.size_.y, 0.0f)); // возвращаем обратно
     model = glm::rotate(model, glm::radians(object.rotation_), glm::vec3(0.0f, 0.0f, 1.0f)); //поворачиваем 
-    model = glm::translate(model, glm::vec3(-origin.x * object.size_.x, -origin.y * object.size_.y, 0.0f)); //переность ось вращения к ценру квадрата 
-    model = glm::translate(model, glm::vec3(object.size_.x/2.0f -10 ,0.0f,  0.0f)); //10 -scale
+    model = glm::translate(model, glm::vec3(-origin.x * object.size_.x , -origin.y * object.size_.y, 0.0f)); //переность ось вращения к ценру квадрата 
+
+    model = glm::translate(model, glm::vec3(offset_particle_cannon ,0.0f,  0.0f)); //10 -scale
     model = glm::scale(model, glm::vec3(object.size_ , 1.0f)); // масштабируем
 
     particle.position =  model * glm::vec4(particle.position.x, particle.position.y , 0.0f, 1.0f);

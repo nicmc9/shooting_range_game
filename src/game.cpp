@@ -52,6 +52,7 @@ void Game::Init()
     ResourceManager::LoadTexture("resources/textures/background.png", false, "background");
     ResourceManager::LoadTexture("resources/textures/TargetP.png", true, "targetp");
     ResourceManager::LoadTexture("resources/textures/TargetG.png", true, "targetg");
+    ResourceManager::LoadTexture("resources/textures/TargetT.png", true, "targett");
     ResourceManager::LoadTexture("resources/textures/Aim.png", true, "aim");
     ResourceManager::LoadTexture("resources/textures/Stand.png", true, "stand");
     ResourceManager::LoadTexture("resources/textures/Cannon.png", true, "cannon");
@@ -238,7 +239,7 @@ if (state_ == GameState::kGameActive)
     {
        if(cannon_reload_time_ > 0) return;
 
-        //Particles->set_work_time(); // пока время по умолчанию
+        Particles->set_work_time(); // пока время по умолчанию
 
         for(auto& cannon_ball : cannon_balls_){
             if (!cannon_ball.activated_) {
